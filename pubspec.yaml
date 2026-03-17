@@ -31,9 +31,32 @@ dependencies:
   flutter:
     sdk: flutter
 
+  flutter_web_plugins:
+    sdk: flutter
+
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+
+  # 반응형 화면·폰트 적응 (다양한 해상도 지원)
+  flutter_screenutil: ^5.9.3
+  
+
+
+  # 로컬라이제이션
+  flutter_localization: ^0.3.3 
+  # 캐릭터셋
+  charset: ^2.0.1
+  # HTTP 클라이언트
+  http: ^1.5.0
+  # XML 파서
+  xml: ^6.5.0
+  # 로컬 스토리지
+  get_storage: ^2.1.1 # 로컬 스토리지 (GetStorage)
+  # 시큐어 스토리지 (세션 토큰 등 민감 데이터)
+  flutter_secure_storage: ^9.2.2
+
+  get: ^4.7.3 # 상태 관리
 
 dev_dependencies:
   flutter_test:

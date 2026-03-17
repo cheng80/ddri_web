@@ -1,0 +1,202 @@
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>DDRI 대여소 조회 (모바일 검색)</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00a857",
+                        "background-light": "#f5f8f7",
+                        "background-dark": "#0f2319",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer base {
+            input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+                cursor: pointer;
+                filter: invert(41%) sepia(87%) saturate(541%) hue-rotate(104deg) brightness(92%) contrast(101%);
+            }
+            .no-scrollbar::-webkit-scrollbar {
+                display: none;
+            }
+            .no-scrollbar {
+                -ms-overflow-style: none;
+                scrollbar-width: none;
+            }
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased overflow-hidden">
+<div class="relative flex h-screen w-full flex-col">
+<header class="flex items-center justify-between border-b border-primary/10 bg-white dark:bg-background-dark px-5 py-3.5 z-30 sticky top-0">
+<div class="flex items-center gap-2">
+<div class="text-primary">
+<svg class="size-7" fill="currentColor" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z"></path>
+</svg>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-primary">DDRI</h1>
+</div>
+<button class="text-slate-600 dark:text-slate-300">
+<span class="material-symbols-outlined text-3xl">menu</span>
+</button>
+</header>
+<section class="bg-white dark:bg-background-dark border-b border-primary/10 px-4 py-3 z-20">
+<div class="flex flex-col gap-3">
+<div class="flex items-center gap-2">
+<button class="flex h-11 items-center justify-center bg-primary text-white rounded-xl px-3 flex-shrink-0 shadow-sm">
+<span class="material-symbols-outlined text-[22px]">my_location</span>
+</button>
+<button class="flex-1 flex h-11 items-center gap-2 px-4 bg-background-light dark:bg-slate-800 border border-primary/20 rounded-xl text-sm font-medium text-slate-500">
+<span class="material-symbols-outlined text-[20px] text-primary">search</span>
+<span>주소 찾기</span>
+</button>
+</div>
+<div class="relative w-full">
+<div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-primary">
+<span class="material-symbols-outlined text-[20px]">schedule</span>
+</div>
+<input class="block h-11 w-full pl-10 pr-3 py-2 bg-white dark:bg-slate-800 border border-primary/20 focus:border-primary focus:ring-0 rounded-xl text-sm font-semibold text-slate-700 dark:text-slate-200" readonly="" type="text" value="2026-03-18 18:00"/>
+</div>
+</div>
+</section>
+<main class="flex flex-col flex-1 overflow-hidden">
+<section class="relative w-full h-[38%] border-b border-primary/10">
+<div class="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center bg-white/95 backdrop-blur shadow-lg p-1 rounded-xl border border-primary/20">
+<label class="flex cursor-pointer h-8 items-center justify-center rounded-lg px-4 has-[:checked]:bg-primary has-[:checked]:text-white text-slate-600 text-[13px] font-bold transition-all">
+<span>300m</span>
+<input class="hidden" name="radius" type="radio" value="300m"/>
+</label>
+<label class="flex cursor-pointer h-8 items-center justify-center rounded-lg px-4 has-[:checked]:bg-primary has-[:checked]:text-white text-slate-600 text-[13px] font-bold transition-all">
+<span>500m</span>
+<input checked="" class="hidden" name="radius" type="radio" value="500m"/>
+</label>
+<label class="flex cursor-pointer h-8 items-center justify-center rounded-lg px-4 has-[:checked]:bg-primary has-[:checked]:text-white text-slate-600 text-[13px] font-bold transition-all">
+<span>1km</span>
+<input class="hidden" name="radius" type="radio" value="1km"/>
+</label>
+</div>
+<div class="w-full h-full bg-slate-200 bg-center bg-no-repeat bg-cover" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBfNdOWvkPcE44WsbSVk0Rgyzdla-xsFeLLkdsfwbisp04gT-xgXz0xKJ990ndjD_ydj8esI9Wpc2Vchu6cmMflSx6xS6pI1u_D0eGaWidvDA0T7qituzHSe1wp4IKAegqkZfGkEe-kEd0QguWoHUTos0WS3FDYBkeG0_jnEtkjT7J1Av19-VdpCu18AA8Un-D4tpsS0wXZ6sSYl8nXvYHsPVnf1hGCPyiTvOmUb5rD7KFSZiUJKIRvwg30WSXuzTVMxpNMio6Srl4R");'>
+</div>
+</section>
+<section class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark px-4 py-5 no-scrollbar">
+<div class="flex items-center justify-between mb-4 px-1">
+<h2 class="text-lg font-bold text-slate-800 dark:text-slate-100">주변 대여소</h2>
+<span class="text-xs text-slate-500 font-semibold bg-white dark:bg-slate-800 px-2.5 py-1 rounded-full border border-slate-200 dark:border-slate-700">8곳</span>
+</div>
+<div class="space-y-4 pb-8">
+<div class="rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-primary/5">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-primary text-white text-[10px] font-bold">대여가능</span>
+<span class="text-[11px] text-slate-500 font-medium">150m 거리</span>
+</div>
+<h3 class="text-base font-bold text-slate-900 dark:text-slate-100">DDRI-024 Gangnam Stn</h3>
+</div>
+<div class="text-right">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-lg">pedal_bike</span>
+<span class="text-xl font-extrabold">12</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 border-t border-slate-50 dark:border-slate-700 pt-3">
+<button class="flex-1 h-10 flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 text-primary rounded-lg text-[13px] font-bold transition-all">
+<span class="material-symbols-outlined text-lg">navigation</span>
+                                길찾기
+                            </button>
+<button class="flex-1 h-10 flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-[13px] font-bold hover:bg-slate-100">
+                                상세보기
+                                <span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-primary/5">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-orange-500 text-white text-[10px] font-bold">보통</span>
+<span class="text-[11px] text-slate-500 font-medium">320m 거리</span>
+</div>
+<h3 class="text-base font-bold text-slate-900 dark:text-slate-100">DDRI-015 Yeoksam Stn</h3>
+</div>
+<div class="text-right">
+<div class="flex items-center gap-1.5 text-primary">
+<span class="material-symbols-outlined text-lg">pedal_bike</span>
+<span class="text-xl font-extrabold">5</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 border-t border-slate-50 dark:border-slate-700 pt-3">
+<button class="flex-1 h-10 flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 text-primary rounded-lg text-[13px] font-bold transition-all">
+<span class="material-symbols-outlined text-lg">navigation</span>
+                                길찾기
+                            </button>
+<button class="flex-1 h-10 flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-[13px] font-bold hover:bg-slate-100">
+                                상세보기
+                                <span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl bg-white dark:bg-slate-800 p-5 shadow-sm border border-primary/5 opacity-80">
+<div class="flex justify-between items-start mb-3">
+<div class="flex flex-col gap-1.5">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded-full bg-slate-400 text-white text-[10px] font-bold">부족</span>
+<span class="text-[11px] text-slate-500 font-medium">480m 거리</span>
+</div>
+<h3 class="text-base font-bold text-slate-900 dark:text-slate-100">DDRI-088 Teheran-ro</h3>
+</div>
+<div class="text-right">
+<div class="flex items-center gap-1.5 text-slate-400">
+<span class="material-symbols-outlined text-lg">pedal_bike</span>
+<span class="text-xl font-extrabold">1</span>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-2 border-t border-slate-50 dark:border-slate-700 pt-3">
+<button class="flex-1 h-10 flex items-center justify-center gap-1.5 bg-primary/5 hover:bg-primary/10 text-primary rounded-lg text-[13px] font-bold transition-all">
+<span class="material-symbols-outlined text-lg">navigation</span>
+                                길찾기
+                            </button>
+<button class="flex-1 h-10 flex items-center justify-center gap-1 bg-slate-50 dark:bg-slate-700/50 text-slate-600 dark:text-slate-300 rounded-lg text-[13px] font-bold hover:bg-slate-100">
+                                상세보기
+                                <span class="material-symbols-outlined text-base">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-6 right-4 z-40">
+<button class="size-14 rounded-full bg-primary text-white shadow-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-2xl">refresh</span>
+</button>
+</div>
+</div>
+
+</body></html>

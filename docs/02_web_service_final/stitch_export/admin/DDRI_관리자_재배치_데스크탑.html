@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#00a857",
+                        "background-light": "#f5f8f7",
+                        "background-dark": "#0f2319",
+                    },
+                    fontFamily: {
+                        "display": ["Public Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.5rem",
+                        "lg": "1rem",
+                        "xl": "1.5rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<title>DDRI - 재배치 판단 지원</title>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen">
+<div class="layout-container flex h-full grow flex-col">
+<!-- Top Navigation Bar -->
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-primary/10 bg-white dark:bg-background-dark px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-4 text-primary">
+<div class="size-8">
+<svg fill="none" viewbox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+<path d="M42.4379 44C42.4379 44 36.0744 33.9038 41.1692 24C46.8624 12.9336 42.2078 4 42.2078 4L7.01134 4C7.01134 4 11.6577 12.932 5.96912 23.9969C0.876273 33.9029 7.27094 44 7.27094 44L42.4379 44Z" fill="currentColor"></path>
+</svg>
+</div>
+<h2 class="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight tracking-tight">DDRI</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<nav class="flex items-center gap-9">
+<a class="text-slate-600 dark:text-slate-400 hover:text-primary transition-colors text-sm font-semibold" href="#">사용자</a>
+<a class="text-primary text-sm font-bold border-b-2 border-primary pb-1" href="#">관리자</a>
+</nav>
+<div class="bg-primary/10 rounded-full size-10 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">account_circle</span>
+</div>
+</div>
+</header>
+<main class="px-4 md:px-10 lg:px-40 py-8 flex flex-col gap-8">
+<!-- Page Title -->
+<div class="flex flex-col gap-2">
+<h1 class="text-slate-900 dark:text-slate-100 text-3xl font-black tracking-tight">관리자 – 재배치 판단 지원</h1>
+<p class="text-slate-500 text-sm">강남구 따릉이 실시간 수요 예측 및 재배치 우선순위 대시보드</p>
+</div>
+<!-- Control Area -->
+<div class="flex flex-wrap items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-xl border border-primary/10 shadow-sm">
+<div class="flex items-center gap-2 px-3 py-2 bg-background-light dark:bg-background-dark rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary text-sm">calendar_today</span>
+<span class="text-sm font-medium">날짜 선택</span>
+</div>
+<div class="flex items-center gap-2 px-3 py-2 bg-background-light dark:bg-background-dark rounded-lg border border-slate-200 dark:border-slate-700 cursor-pointer hover:border-primary transition-all">
+<span class="material-symbols-outlined text-primary text-sm">schedule</span>
+<span class="text-sm font-medium">시간 선택</span>
+</div>
+<div class="h-6 w-px bg-slate-200 dark:bg-slate-700 mx-2"></div>
+<div class="flex items-center gap-2">
+<label class="relative inline-flex items-center cursor-pointer">
+<input class="sr-only peer" type="checkbox" value=""/>
+<div class="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-primary"></div>
+<span class="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">긴급만</span>
+</label>
+</div>
+<div class="flex items-center gap-2 ml-auto">
+<select class="bg-background-light dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 font-medium">
+<option>정렬: 위험점수</option>
+<option>정렬: 대여소명</option>
+<option>정렬: 우선순위</option>
+</select>
+<select class="bg-background-light dark:bg-background-dark border border-slate-200 dark:border-slate-700 text-sm rounded-lg focus:ring-primary focus:border-primary block p-2 font-medium">
+<option>행정동 전체</option>
+<option>역삼동</option>
+<option>삼성동</option>
+<option>논현동</option>
+</select>
+</div>
+</div>
+<!-- Summary Cards -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-primary/10 shadow-sm">
+<div class="flex justify-between items-center">
+<p class="text-slate-500 text-sm font-medium uppercase tracking-wider">전체</p>
+<span class="material-symbols-outlined text-slate-400">directions_bike</span>
+</div>
+<p class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">161</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-red-100 dark:border-red-900/30 shadow-sm">
+<div class="flex justify-between items-center">
+<p class="text-slate-500 text-sm font-medium uppercase tracking-wider">위험</p>
+<span class="material-symbols-outlined text-red-500">warning</span>
+</div>
+<p class="text-red-600 dark:text-red-400 text-3xl font-bold leading-tight">23</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-primary/10 shadow-sm">
+<div class="flex justify-between items-center">
+<p class="text-slate-500 text-sm font-medium uppercase tracking-wider">예외</p>
+<span class="material-symbols-outlined text-orange-400">visibility_off</span>
+</div>
+<p class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">3</p>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 bg-white dark:bg-slate-900 border border-primary/10 shadow-sm">
+<div class="flex justify-between items-center">
+<p class="text-slate-500 text-sm font-medium uppercase tracking-wider">평균 위험도</p>
+<span class="material-symbols-outlined text-primary">analytics</span>
+</div>
+<p class="text-slate-900 dark:text-slate-100 text-3xl font-bold leading-tight">0.4</p>
+</div>
+</div>
+<!-- Data Table -->
+<div class="bg-white dark:bg-slate-900 rounded-xl border border-primary/10 shadow-md overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-slate-50 dark:bg-slate-800/50 border-b border-primary/10">
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">대여소명</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">동</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300 text-center">지역특성</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300 text-center">재고</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300 text-center">예측수요</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300 text-center">차이</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300">위험도</th>
+<th class="px-6 py-4 text-sm font-bold text-slate-700 dark:text-slate-300 text-center">우선순위</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-100 dark:divide-slate-800">
+<!-- Row 1 -->
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-5 text-sm font-semibold text-slate-900 dark:text-slate-100">역삼지하보도 7번출구 앞</td>
+<td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">역삼동</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-bold uppercase">c00</span>
+</td>
+<td class="px-6 py-5 text-sm text-center font-medium">7</td>
+<td class="px-6 py-5 text-sm text-center font-medium">12</td>
+<td class="px-6 py-5 text-sm text-center font-bold text-red-500">-5</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 min-w-[80px]">
+<div class="bg-red-500 h-2 rounded-full" style="width: 80%;"></div>
+</div>
+<span class="text-sm font-bold text-red-500">0.8</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center justify-center size-7 bg-red-100 dark:bg-red-900/40 text-red-600 dark:text-red-400 rounded-full text-xs font-black">1</span>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-5 text-sm font-semibold text-slate-900 dark:text-slate-100">강남역 2번출구</td>
+<td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">역삼동</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2.5 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded text-xs font-bold uppercase">c01</span>
+</td>
+<td class="px-6 py-5 text-sm text-center font-medium">3</td>
+<td class="px-6 py-5 text-sm text-center font-medium">8</td>
+<td class="px-6 py-5 text-sm text-center font-bold text-red-500">-5</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 min-w-[80px]">
+<div class="bg-orange-500 h-2 rounded-full" style="width: 70%;"></div>
+</div>
+<span class="text-sm font-bold text-orange-500">0.7</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center justify-center size-7 bg-orange-100 dark:bg-orange-900/40 text-orange-600 dark:text-orange-400 rounded-full text-xs font-black">2</span>
+</td>
+</tr>
+<!-- Sample Additional Row for consistency -->
+<tr class="hover:bg-primary/5 transition-colors">
+<td class="px-6 py-5 text-sm font-semibold text-slate-900 dark:text-slate-100">논현역 3번출구</td>
+<td class="px-6 py-5 text-sm text-slate-600 dark:text-slate-400">논현동</td>
+<td class="px-6 py-5 text-center">
+<span class="px-2.5 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-bold uppercase">c00</span>
+</td>
+<td class="px-6 py-5 text-sm text-center font-medium">10</td>
+<td class="px-6 py-5 text-sm text-center font-medium">12</td>
+<td class="px-6 py-5 text-sm text-center font-bold text-orange-500">-2</td>
+<td class="px-6 py-5">
+<div class="flex items-center gap-3">
+<div class="flex-1 bg-slate-200 dark:bg-slate-700 rounded-full h-2 min-w-[80px]">
+<div class="bg-primary h-2 rounded-full" style="width: 30%;"></div>
+</div>
+<span class="text-sm font-bold text-primary">0.3</span>
+</div>
+</td>
+<td class="px-6 py-5 text-center">
+<span class="inline-flex items-center justify-center size-7 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 rounded-full text-xs font-black">3</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Exception Stations Collapsible -->
+<details class="group bg-white dark:bg-slate-900 rounded-xl border border-primary/10 shadow-sm overflow-hidden">
+<summary class="flex items-center justify-between p-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+<div class="flex items-center gap-3 text-orange-600 dark:text-orange-400 font-semibold">
+<span class="material-symbols-outlined">info</span>
+<span>예외 스테이션: station_id 2314, 2323, 3628 – 실시간 비노출</span>
+</div>
+<span class="material-symbols-outlined transition-transform group-open:rotate-180">expand_more</span>
+</summary>
+<div class="p-4 border-t border-slate-100 dark:border-slate-800 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                    해당 스테이션들은 현재 공사 또는 일시 폐쇄 상태로 인해 자동 재배치 알고리즘에서 제외되었습니다. 
+                    현장 확인 후 노출 상태를 변경하시기 바랍니다. 관리자에게만 노출되는 정보입니다.
+                </div>
+</details>
+<!-- Bottom Map Preview (Optional Visual) -->
+<div class="rounded-xl overflow-hidden h-64 relative border border-primary/10">
+<div class="absolute inset-0 bg-slate-200 dark:bg-slate-800 flex items-center justify-center">
+<div class="flex flex-col items-center gap-2">
+<span class="material-symbols-outlined text-4xl text-slate-400">map</span>
+<p class="text-slate-500 font-medium">강남구 재배치 시각화 맵</p>
+</div>
+</div>
+<img alt="Map of Gangnam bike stations" class="w-full h-full object-cover mix-blend-overlay opacity-30" data-alt="Abstract map showing bike station locations in Gangnam" data-location="Gangnam, Seoul" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDWlsm3EDb-JxaX0f_WPXQNbB03-clqQ6wuA3DlOzMWdxXwhtL_uLwQbySbA4A4u-QsvdK18qvHYOJyNGnGXFmfEKqefiYBUe7Lm9tLIUAC06yoDwpvPCPwSHCTV5qX4phfpyS3qbG_92yEv7gwuJZ5n5YK-MyOENL71ANHAAbAqrGe79vmH22-MrRJhuDZBJOaDTDIIquQm3lgQScu6mfAf_jlQr5GqyvmGJPWnjJz_Lx99sSkcmGczgR8u9LFaoqPrhUldlrYY6Nt"/>
+</div>
+</main>
+<footer class="mt-auto py-6 text-center border-t border-primary/5 text-slate-400 text-xs">
+            © 2023 DDRI Reallocation Support System. Gangnam-gu Smart Mobility Division.
+        </footer>
+</div>
+</body></html>
