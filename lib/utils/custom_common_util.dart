@@ -1,4 +1,4 @@
-import 'package:ddri_web/app_config.dart';
+import '../app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 

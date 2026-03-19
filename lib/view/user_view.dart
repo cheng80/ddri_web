@@ -1,4 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+
+import '../common/layout/app_scaffold.dart';
+import 'user/user_page_controller.dart';
+import 'user/user_search_area.dart';
+import 'user/user_station_list.dart';
 
 /// 사용자 페이지: 근처 대여소 조회
 class UserView extends StatelessWidget {
@@ -6,9 +12,20 @@ class UserView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('대여소 조회')),
-      body: const Center(child: Text('사용자 페이지 (구현 예정)')),
+    if (!Get.isRegistered<UserPageController>()) {
+      Get.put(UserPageController(), permanent: true);
+    }
+
+    return AppScaffold(
+      title: '대여소 조회',
+      currentPath: '/user',
+      body: Column(
+        children: [
+          const UserSearchArea(),
+          const Divider(height: 1),
+          Expanded(child: UserStationList()),
+        ],
+      ),
     );
   }
 }

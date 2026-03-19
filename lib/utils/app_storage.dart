@@ -1,4 +1,4 @@
-import 'package:ddri_web/app_config.dart';
+import '../app_config.dart';
 import 'package:get_storage/get_storage.dart';
 
 /// AppStorage - 화면 간 상태 동기화용 정적 헬퍼

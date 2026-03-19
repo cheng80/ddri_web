@@ -43,8 +43,9 @@ dependencies:
   
 
 
-  # 로컬라이제이션
-  flutter_localization: ^0.3.3 
+  # Material 위젯 한국어 (DatePicker 등)
+  flutter_localizations:
+    sdk: flutter
   # 캐릭터셋
   charset: ^2.0.1
   # HTTP 클라이언트
@@ -57,6 +58,13 @@ dependencies:
   flutter_secure_storage: ^9.2.2
 
   get: ^4.7.3 # 상태 관리
+
+  # 외부 지도 길찾기 (웹: url_launcher로 지도 사이트 열기)
+  url_launcher: ^6.3.0
+
+  # 위치·주소 검색 (Phase 2.1)
+  geolocator: ^13.0.2
+  kpostal_plus: ^1.0.3
 
 dev_dependencies:
   flutter_test:

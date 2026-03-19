@@ -1,0 +1,158 @@
+import 'package:flutter/material.dart';
+
+import '../../common/api/models/station_models.dart';
+import '../../common/map/map_directions_launcher.dart';
+import '../../core/design_token.dart';
+
+/// 대여소 카드: 배지, 거리, 자전거 수, 길찾기
+class UserStationCard extends StatelessWidget {
+  const UserStationCard({
+    super.key,
+    required this.station,
+  });
+
+  final StationNearbyItem station;
+
+  @override
+  Widget build(BuildContext context) {
+    final badgeColor = _badgeColor(station.availabilityLevel);
+    final badgeLabel = _badgeLabel(station.availabilityLevel);
+
+    return Card(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(DesignToken.cardRadius),
+      ),
+      elevation: DesignToken.cardElevation,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: badgeColor.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Text(
+                    badgeLabel,
+                    style: TextStyle(
+                      color: badgeColor,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  _formatDistance(station.distanceM),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: Colors.grey.shade600,
+                      ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => launchMapDirections(
+                    lat: station.latitude,
+                    lng: station.longitude,
+                    destinationTitle: station.stationName,
+                  ),
+                  icon: const Icon(Icons.directions, color: Colors.blue),
+                  tooltip: '길찾기',
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text(
+              station.stationName,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
+            if (station.address.isNotEmpty) ...[
+              const SizedBox(height: 4),
+              Text(
+                station.address,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: Colors.grey.shade600,
+                    ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 4,
+              children: [
+                _InfoChip(
+                  label: '현재 ${station.currentBikeStock}대',
+                ),
+                _InfoChip(
+                  label: '예상 잔여 ${station.predictedRemainingBikes.toStringAsFixed(1)}대',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Color _badgeColor(String level) {
+    switch (level) {
+      case 'sufficient':
+        return DesignToken.badgeSufficient;
+      case 'normal':
+        return DesignToken.badgeNormal;
+      default:
+        return DesignToken.badgeLow;
+    }
+  }
+
+  String _badgeLabel(String level) {
+    switch (level) {
+      case 'sufficient':
+        return '대여가능';
+      case 'normal':
+        return '보통';
+      default:
+        return '부족';
+    }
+  }
+
+  String _formatDistance(double m) {
+    if (m >= 1000) {
+      return '${(m / 1000).toStringAsFixed(1)}km';
+    }
+    return '${m.round()}m';
+  }
+}
+
+class _InfoChip extends StatelessWidget {
+  const _InfoChip({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.grey.shade200,
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.bodySmall,
+      ),
+    );
+  }
+}
