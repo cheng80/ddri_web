@@ -1,3 +1,4 @@
+// DDRI API 클라이언트: 사용자/관리자/날씨 API, baseUrl 플랫폼별
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -7,15 +8,17 @@ import 'package:http/http.dart' as http;
 
 import 'models/station_models.dart';
 
-/// DDRI API 클라이언트 인터페이스
-/// 모든 API 호출은 이 클라이언트를 통해 수행
+/// DDRI API 클라이언트.
+/// 모든 API 호출은 이 클라이언트를 통해 수행.
 class DdriApiClient {
   DdriApiClient({String? baseUrl}) : _baseUrl = baseUrl ?? CustomCommonUtil.getApiBaseUrlSync();
 
   final String _baseUrl;
 
+  /// v1 API 베이스 경로
   String get _v1 => '$_baseUrl/v1';
 
+  /// GET 요청. 4xx/5xx 시 [ApiException] 발생.
   Future<Map<String, dynamic>> _get(String path, {Map<String, String>? queryParams}) async {
     final uri = Uri.parse('$_v1$path').replace(queryParameters: queryParams);
     final response = await http.get(uri);
@@ -78,9 +81,42 @@ class DdriApiClient {
     final json = await _get('/stations', queryParams: params.isNotEmpty ? params : null);
     return StationsListResponse.fromJson(json);
   }
+
+  /// 주간 날씨 조회
+  Future<List<WeatherDayItem>> getWeeklyWeather({
+    required double lat,
+    required double lon,
+  }) async {
+    final json = await _get('/weather/direct', queryParams: {
+      'lat': lat.toString(),
+      'lon': lon.toString(),
+    });
+    return (json['results'] as List<dynamic>?)
+            ?.map((e) => WeatherDayItem.fromJson(e as Map<String, dynamic>))
+            .toList() ??
+        [];
+  }
+
+  /// 선택 날짜 날씨 조회
+  Future<WeatherDayItem?> getSelectedWeather({
+    required double lat,
+    required double lon,
+    required String targetDatetime,
+  }) async {
+    final json = await _get('/weather/direct/single', queryParams: {
+      'lat': lat.toString(),
+      'lon': lon.toString(),
+      'target_datetime': targetDatetime,
+    });
+    final result = json['result'];
+    if (result is Map<String, dynamic>) {
+      return WeatherDayItem.fromJson(result);
+    }
+    return null;
+  }
 }
 
-/// API 예외
+/// API 예외. HTTP 4xx/5xx 응답 시 발생.
 class ApiException implements Exception {
   ApiException(this.statusCode, this.body);
   final int statusCode;
@@ -89,7 +125,7 @@ class ApiException implements Exception {
   String toString() => 'ApiException($statusCode): $body';
 }
 
-/// 근처 대여소 응답
+/// 근처 대여소 응답 (GET /v1/user/stations/nearby)
 class NearbyStationsResponse {
   const NearbyStationsResponse({
     required this.targetDatetime,
@@ -119,6 +155,7 @@ class NearbyStationsResponse {
   }
 }
 
+/// 사용자 위치 (위경도)
 class UserLocation {
   const UserLocation({required this.lat, required this.lng});
   final double lat;
@@ -129,6 +166,7 @@ class UserLocation {
       );
 }
 
+/// 예외 스테이션 (실시간 비노출 등)
 class ExceptionItem {
   const ExceptionItem({required this.stationId, required this.reason});
   final int stationId;
@@ -139,7 +177,7 @@ class ExceptionItem {
       );
 }
 
-/// 위험 대여소 응답
+/// 위험 대여소 응답 (GET /v1/admin/stations/risk)
 class RiskStationsResponse {
   const RiskStationsResponse({
     required this.baseDatetime,
@@ -169,6 +207,7 @@ class RiskStationsResponse {
   }
 }
 
+/// 위험 대여소 요약 (전체/위험/예외 개수, 평균 위험도)
 class RiskSummary {
   const RiskSummary({
     required this.totalCount,
@@ -188,7 +227,7 @@ class RiskSummary {
       );
 }
 
-/// 스테이션 목록 응답
+/// 스테이션 마스터 목록 응답 (GET /v1/stations)
 class StationsListResponse {
   const StationsListResponse({required this.items, required this.totalCount});
   final List<StationMasterItem> items;

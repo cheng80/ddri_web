@@ -1,11 +1,12 @@
+// DDRI 관리자 대여소 목록: DataTable, 8개 shrinkWrap / 9개+ 스크롤
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../common/api/models/station_models.dart';
 import '../../core/design_token.dart';
-import 'admin_page_controller.dart';
+import '../../vm/admin_page_controller.dart';
 
-/// 관리자 대여소 목록
+/// 관리자 대여소 목록 (테이블 형식). _StationHeaderRow + _StationDataRow.
 class AdminStationList extends StatelessWidget {
   const AdminStationList({super.key});
 

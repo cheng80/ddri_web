@@ -1,9 +1,65 @@
-# DDRI 웹서비스 ERD 초안
+# DDRI 최소 ERD
 
-작성일: 2026-03-16  
-목적: 웹서비스의 최소 데이터 구조를 관계 중심으로 빠르게 공유하기 위한 ERD 초안을 정리한다.
+작성일: 2026-03-19  
+목적: 현재 서비스 기준의 최소 영속 구조를 관계 중심으로 정리한다.
 
-## 1. 엔터티 목록
+## 1. 현재 ERD 해석
+
+현재 웹서비스는 무상태 운영도 가능하다.  
+즉, 아래 두 가지 중 하나로 볼 수 있다.
+
+1. DB 없음
+2. 예측 로그만 저장하는 최소 DB
+
+현재 ERD는 2번을 기준으로 정의한다.
+
+## 2. 엔터티 목록
+
+- `prediction_logs`
+
+## 3. 관계 설명
+
+- 현재 최소 ERD에는 핵심 참조 관계가 없다.
+- 스테이션 마스터는 DB 테이블이 아니라 로컬 마스터 데이터로 취급한다.
+- 실시간 재고와 날씨는 외부 API에서 조회한다.
+
+## 4. 텍스트 ERD
+
+```text
+prediction_logs
+ - id PK
+ - prediction_time
+ - target_time
+ - station_id
+ - horizon_hours
+ - predicted_stock
+ - predicted_net_change
+ - model_version
+ - source_updated_at
+ - created_at
+```
+
+## 5. Mermaid ERD
+
+```mermaid
+erDiagram
+    prediction_logs {
+        bigint id PK
+        datetime prediction_time
+        datetime target_time
+        int station_id
+        int horizon_hours
+        float predicted_stock
+        float predicted_net_change
+        string model_version
+        datetime source_updated_at
+        datetime created_at
+    }
+```
+
+## 6. 현재 제외한 엔터티
+
+아래 항목은 현재 ERD에서 제외한다.
 
 - `stations`
 - `station_api_mappings`
@@ -11,162 +67,24 @@
 - `station_demand_forecasts`
 - `station_risk_snapshots`
 - `statistics_snapshots`
+- `users`
+- `favorites`
 
-## 2. 관계 설명
+이유:
 
-- 하나의 `station`은 하나 이상의 API 매핑 이력을 가질 수 있다
-- 하나의 `station`은 여러 개의 실시간 재고 기록을 가진다
-- 하나의 `station`은 여러 개의 예측 결과를 가진다
-- 하나의 `station`은 여러 개의 위험도 스냅샷을 가진다
-- 통계 스냅샷은 집계용 별도 테이블로 station 직접 참조 없이도 운영 가능하다
+- 정적 기준 정보는 로컬 데이터로 처리
+- 실시간 데이터는 외부 API 기준
+- 저장 기능이 없는 조회형 웹
+- 통계 및 사용자 기능이 현재 범위 밖
 
-## 3. 텍스트 ERD
+## 7. 향후 확장 가능성
 
-```text
-stations
- - id PK
- - station_id UK
- - api_station_id
- - station_name
- - district_name
- - address
- - latitude
- - longitude
- - cluster_code
- - operational_status
- - is_service_target
+아래 요구가 생기면 ERD를 다시 확장한다.
 
-station_api_mappings
- - id PK
- - station_id FK -> stations.station_id
- - resolved_api_station_id
- - source_api
- - match_status
- - exception_reason
- - verified_at
+- 예측 로그 장기 보관
+- 운영 정책 저장
+- 관리자 설정 수정
+- 통계 집계 저장
+- 사용자 계정/권한 도입
 
-realtime_station_stock
- - id PK
- - station_id FK -> stations.station_id
- - stock_datetime
- - current_bike_stock
- - parking_bike_total_count
- - shared_count
- - operational_status
-
-station_demand_forecasts
- - id PK
- - station_id FK -> stations.station_id
- - target_datetime
- - predicted_rental_count
- - predicted_return_count
- - predicted_remaining_bikes
- - availability_level
- - model_version
- - cluster_code
-
-station_risk_snapshots
- - id PK
- - station_id FK -> stations.station_id
- - base_datetime
- - current_bike_stock
- - predicted_demand
- - stock_gap
- - risk_score
- - reallocation_priority
- - operational_status
-
-statistics_snapshots
- - id PK
- - base_date
- - base_hour
- - cluster_code
- - metric_key
- - metric_value
- - dimension_key
- - dimension_value
-```
-
-## 4. Mermaid ERD
-
-```mermaid
-erDiagram
-    stations ||--o{ station_api_mappings : has
-    stations ||--o{ realtime_station_stock : has
-    stations ||--o{ station_demand_forecasts : has
-    stations ||--o{ station_risk_snapshots : has
-
-    stations {
-        bigint id PK
-        int station_id UK
-        string api_station_id
-        string station_name
-        string district_name
-        string address
-        decimal latitude
-        decimal longitude
-        string cluster_code
-        string operational_status
-        boolean is_service_target
-    }
-
-    station_api_mappings {
-        bigint id PK
-        int station_id FK
-        string resolved_api_station_id
-        string source_api
-        string match_status
-        string exception_reason
-        datetime verified_at
-    }
-
-    realtime_station_stock {
-        bigint id PK
-        int station_id FK
-        datetime stock_datetime
-        int current_bike_stock
-        int parking_bike_total_count
-        float shared_count
-        string operational_status
-    }
-
-    station_demand_forecasts {
-        bigint id PK
-        int station_id FK
-        datetime target_datetime
-        float predicted_rental_count
-        float predicted_return_count
-        float predicted_remaining_bikes
-        string availability_level
-        string model_version
-        string cluster_code
-    }
-
-    station_risk_snapshots {
-        bigint id PK
-        int station_id FK
-        datetime base_datetime
-        int current_bike_stock
-        float predicted_demand
-        float stock_gap
-        float risk_score
-        int reallocation_priority
-        string operational_status
-    }
-
-    statistics_snapshots {
-        bigint id PK
-        date base_date
-        int base_hour
-        string cluster_code
-        string metric_key
-        float metric_value
-        string dimension_key
-        string dimension_value
-    }
-```
-
-## 5. 현재 해석
-
-이 ERD는 1차 서비스용 최소 구조다.  
-향후 로그인, 즐겨찾기, 관리자 메모, 알림 기능이 들어가면 별도 사용자 관련 엔터티를 추가하면 된다.
+현재 단계에서는 위 확장을 미리 테이블로 만들지 않는다.

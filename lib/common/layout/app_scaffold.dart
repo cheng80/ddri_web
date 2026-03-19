@@ -1,9 +1,11 @@
+// DDRI 공통 레이아웃: TopNavBar + body, 모든 페이지 공통
 import 'package:flutter/material.dart';
 
 import '../../app_config.dart';
 import 'top_nav_bar.dart';
 
-/// 공통 레이아웃: 상단 네비 + 본문
+/// 공통 레이아웃: 상단 네비 + 본문.
+/// [currentPath]로 사용자/관리자 탭 활성화 상태 전달.
 class AppScaffold extends StatelessWidget {
   const AppScaffold({
     super.key,

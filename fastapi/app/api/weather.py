@@ -6,6 +6,8 @@ Weather API - Open-Meteo API 조회 (DB 저장 없음, API 키 불필요)
 from fastapi import APIRouter, Query
 from typing import Optional
 from datetime import datetime
+
+from ..utils.security import validate_date_yyyy_mm_dd, validate_iso_datetime
 from ..utils.weather_service import WeatherService
 
 router = APIRouter()
@@ -28,13 +30,10 @@ async def fetch_weather_direct(
     try:
         start_date_obj = None
         if start_date:
-            try:
-                start_date_obj = datetime.strptime(start_date, "%Y-%m-%d")
-            except ValueError:
-                return {
-                    "result": "Error",
-                    "errorMsg": f"날짜 형식이 올바르지 않습니다. (YYYY-MM-DD 형식 필요): {start_date}",
-                }
+            validated = validate_date_yyyy_mm_dd(start_date)
+            if not validated:
+                return {"result": "Error", "errorMsg": "날짜 형식이 올바르지 않습니다. (YYYY-MM-DD 형식 필요)"}
+            start_date_obj = datetime.strptime(validated, "%Y-%m-%d")
 
         weather_service = WeatherService()
         forecast_list = weather_service.fetch_daily_forecast(
@@ -56,52 +55,58 @@ async def fetch_weather_direct(
                 "weather_type": forecast["weather_type"],
                 "weather_low": forecast["weather_low"],
                 "weather_high": forecast["weather_high"],
+                "precipitation_probability_max": forecast["precipitation_probability_max"],
                 "icon_url": forecast["icon_url"],
             })
 
         return {"results": results}
 
     except ValueError as e:
-        return {"result": "Error", "errorMsg": str(e)}
-    except Exception as e:
-        import traceback
-        return {
-            "result": "Error",
-            "errorMsg": str(e),
-            "traceback": traceback.format_exc(),
-        }
+        return {"result": "Error", "errorMsg": "입력값을 처리할 수 없습니다."}
+    except Exception:
+        return {"result": "Error", "errorMsg": "날씨 조회 중 오류가 발생했습니다."}
 
 
 @router.get("/direct/single")
 async def fetch_weather_direct_single(
     lat: float = Query(..., description="위도 (필수)"),
     lon: float = Query(..., description="경도 (필수)"),
-    target_date: Optional[str] = Query(None, description="조회할 날짜 (YYYY-MM-DD), 없으면 오늘 날짜"),
+    target_datetime: Optional[str] = Query(
+        None,
+        description="조회할 시각 (ISO datetime), 없으면 현재 시각 기준 가장 가까운 시간별 예보",
+    ),
+    target_date: Optional[str] = Query(
+        None,
+        description="하위 호환용 날짜 (YYYY-MM-DD). target_datetime이 없을 때만 사용",
+    ),
 ):
     """
-    Open-Meteo API에서 특정 날짜의 날씨 데이터만 가져오기 (하루치)
+    Open-Meteo API에서 특정 시각의 시간별 날씨 데이터 1건 가져오기
 
     - lat, lon으로 Open-Meteo Forecast API 호출
-    - target_date가 없으면 오늘 날씨만 반환
-    - target_date가 있으면 해당 날짜의 날씨만 반환 (오늘부터 최대 16일)
+    - target_datetime이 있으면 해당 시각에 가장 가까운 시간별 날씨 반환
+    - target_datetime이 없고 target_date가 있으면 해당 날짜 12:00 기준으로 반환
+    - 값이 모두 없으면 현재 시각 기준 반환
     - API 키 불필요
     """
     try:
-        target_date_obj = None
-        if target_date:
-            try:
-                target_date_obj = datetime.strptime(target_date, "%Y-%m-%d")
-            except ValueError:
-                return {
-                    "result": "Error",
-                    "errorMsg": f"날짜 형식이 올바르지 않습니다. (YYYY-MM-DD 형식 필요): {target_date}",
-                }
+        target_datetime_obj = None
+        if target_datetime:
+            validated = validate_iso_datetime(target_datetime)
+            if not validated:
+                return {"result": "Error", "errorMsg": "날짜 형식이 올바르지 않습니다. (ISO datetime 형식 필요)"}
+            target_datetime_obj = datetime.fromisoformat(validated.replace("Z", "+00:00"))
+        elif target_date:
+            validated = validate_date_yyyy_mm_dd(target_date)
+            if not validated:
+                return {"result": "Error", "errorMsg": "날짜 형식이 올바르지 않습니다. (YYYY-MM-DD 형식 필요)"}
+            target_datetime_obj = datetime.strptime(validated, "%Y-%m-%d").replace(hour=12)
 
         weather_service = WeatherService()
-        forecast = weather_service.fetch_single_day_weather(
+        forecast = weather_service.fetch_single_datetime_weather(
             lat=lat,
             lon=lon,
-            target_date=target_date_obj,
+            target_datetime=target_datetime_obj,
         )
 
         weather_datetime = forecast["weather_datetime"]
@@ -115,17 +120,14 @@ async def fetch_weather_direct_single(
             "weather_type": forecast["weather_type"],
             "weather_low": forecast["weather_low"],
             "weather_high": forecast["weather_high"],
+            "temperature": forecast["temperature"],
+            "precipitation_probability": forecast["precipitation_probability"],
             "icon_url": forecast["icon_url"],
         }
 
         return {"result": result}
 
-    except ValueError as e:
-        return {"result": "Error", "errorMsg": str(e)}
-    except Exception as e:
-        import traceback
-        return {
-            "result": "Error",
-            "errorMsg": str(e),
-            "traceback": traceback.format_exc(),
-        }
+    except ValueError:
+        return {"result": "Error", "errorMsg": "입력값을 처리할 수 없습니다."}
+    except Exception:
+        return {"result": "Error", "errorMsg": "날씨 조회 중 오류가 발생했습니다."}

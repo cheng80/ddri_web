@@ -1,8 +1,9 @@
+// DDRI 관리자 테이블 셀: 위험도 프로그레스 바, 우선순위 배지
 import 'package:flutter/material.dart';
 
 import '../../core/design_token.dart';
 
-/// Stitch 디자인: 위험도 프로그레스 바 + 숫자
+/// 위험도 프로그레스 바 + 숫자. 0.7↑ 빨강, 0.5↑ 주황, 그 외 녹색.
 Widget buildRiskCell(double riskScore) {
   final color = riskScore >= 0.7
       ? Colors.red
@@ -35,7 +36,7 @@ Widget buildRiskCell(double riskScore) {
   );
 }
 
-/// Stitch 디자인: 우선순위 원형 배지 (1=빨강, 2=주황, 3=회색)
+/// 우선순위 원형 배지. 1=빨강, 2=주황, 3+=회색.
 Widget buildPriorityBadge(int priority) {
   final color = priority <= 1
       ? Colors.red

@@ -1,82 +1,13 @@
 erDiagram
-    stations ||--o{ station_api_mappings : has
-    stations ||--o{ realtime_station_stock : has
-    stations ||--o{ station_demand_forecasts : has
-    stations ||--o{ station_risk_snapshots : has
-
-    stations {
+    prediction_logs {
         bigint id PK
-        int station_id UK
-        string api_station_id
-        string station_name
-        string district_name
-        string address
-        decimal latitude
-        decimal longitude
-        string cluster_code
-        string operational_status
-        boolean is_service_target
-        datetime created_at
-        datetime updated_at
-    }
-
-    station_api_mappings {
-        bigint id PK
-        int station_id FK
-        string resolved_api_station_id
-        string source_api
-        string match_status
-        string exception_reason
-        datetime verified_at
-        datetime created_at
-    }
-
-    realtime_station_stock {
-        bigint id PK
-        int station_id FK
-        datetime stock_datetime
-        int current_bike_stock
-        int parking_bike_total_count
-        decimal shared_count
-        string operational_status
-        string raw_payload_hash
-        datetime created_at
-    }
-
-    station_demand_forecasts {
-        bigint id PK
-        int station_id FK
-        datetime target_datetime
-        decimal predicted_rental_count
-        decimal predicted_return_count
-        decimal predicted_remaining_bikes
-        string availability_level
+        datetime prediction_time
+        datetime target_time
+        int station_id
+        int horizon_hours
+        decimal predicted_stock
+        decimal predicted_net_change
         string model_version
-        string cluster_code
-        datetime created_at
-    }
-
-    station_risk_snapshots {
-        bigint id PK
-        int station_id FK
-        datetime base_datetime
-        int current_bike_stock
-        decimal predicted_demand
-        decimal stock_gap
-        decimal risk_score
-        int reallocation_priority
-        string operational_status
-        datetime created_at
-    }
-
-    statistics_snapshots {
-        bigint id PK
-        date base_date
-        int base_hour
-        string cluster_code
-        string metric_key
-        decimal metric_value
-        string dimension_key
-        string dimension_value
+        datetime source_updated_at
         datetime created_at
     }

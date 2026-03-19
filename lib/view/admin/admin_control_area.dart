@@ -1,10 +1,11 @@
+// DDRI 관리자 제어: 날짜/시간, 긴급만, 행정동, 정렬, 순서, 반응형
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/design_token.dart';
-import 'admin_page_controller.dart';
+import '../../vm/admin_page_controller.dart';
 
-/// 관리자 제어 영역: 기준 날짜/시간, 필터, 정렬
+/// 관리자 제어 영역: 기준 날짜/시간, 필터, 정렬.
 class AdminControlArea extends StatelessWidget {
   const AdminControlArea({super.key});
 

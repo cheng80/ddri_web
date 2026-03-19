@@ -44,7 +44,7 @@
 - **Screen ID**: `3d8c201d09ec41b4b4dc30aab65cf855`
 - **파일**: `DDRI_대여소_조회_데스크탑_screenshot.png`, `DDRI_대여소_조회_데스크탑.html`
 - **방향**: DDRI는 따릉이 전용 대여 앱 아님. 비로그인 조회 전용. 이용권·사용자 my 절대 금지. 단일 지도 + 카드 리스트 (카드당 지도 없음)
-- **지도 UX**: [10_ddri_user_page_map_ux_spec.md](10_ddri_user_page_map_ux_spec.md)
+- **지도 UX**: [10_ddri_user_page_map_ux_spec.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/legacy/10_ddri_user_page_map_ux_spec.md)
 
 ---
 
@@ -125,6 +125,6 @@ DDRI는 Flutter Web이므로 위 스킬은 해당 없음.
 
 ## 5. 관련 문서
 
-- [03_ddri_web_service_screen_spec.md](03_ddri_web_service_screen_spec.md) – 화면 설계
-- [08_ddri_user_page_spec_detail.md](08_ddri_user_page_spec_detail.md) – 사용자 페이지 상세
+- [01_screen_design_and_scope.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/01_screen_design_and_scope.md) – 현재 화면 설계 기준
+- [08_ddri_user_page_spec_detail.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/legacy/08_ddri_user_page_spec_detail.md) – 사용자 페이지 상세 레거시
 - [stitch_export/README.md](stitch_export/README.md) – 다운로드된 Stitch 산출물

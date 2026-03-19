@@ -56,12 +56,12 @@
 
 | 문서 | 경로 |
 |------|------|
-| **반응형 브레이크포인트** | `docs/02_web_service_final/12_ddri_responsive_breakpoints_and_layouts.md` |
-| Stitch 적용 가이드 | `docs/02_web_service_final/09_stitch_design_application_guide.md` |
-| 지도 UX 설계 | `docs/02_web_service_final/10_ddri_user_page_map_ux_spec.md` |
-| 화면 설계서 | `docs/02_web_service_final/03_ddri_web_service_screen_spec.md` |
-| 사용자 페이지 상세 | `docs/02_web_service_final/08_ddri_user_page_spec_detail.md` |
-| stitch_export README | `docs/02_web_service_final/stitch_export/README.md` |
+| 현재 화면 설계 기준 | `docs/02_web_service_final/01_screen_design_and_scope.md` |
+| Stitch 적용 가이드 | `docs/02_web_service_final/stitch/09_stitch_design_application_guide.md` |
+| 반응형 브레이크포인트 (레거시) | `docs/02_web_service_final/legacy/12_ddri_responsive_breakpoints_and_layouts.md` |
+| 지도 UX 설계 (레거시) | `docs/02_web_service_final/legacy/10_ddri_user_page_map_ux_spec.md` |
+| 사용자 페이지 상세 (레거시) | `docs/02_web_service_final/legacy/08_ddri_user_page_spec_detail.md` |
+| stitch_export README | `docs/02_web_service_final/stitch/stitch_export/README.md` |
 
 ### 3.3 웹 프로젝트
 

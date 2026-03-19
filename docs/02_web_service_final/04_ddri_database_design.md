@@ -1,198 +1,108 @@
-# DDRI 웹서비스 데이터베이스 설계서
+# DDRI 최소 DB 설계서
 
-작성일: 2026-03-16  
-목적: 웹서비스에서 필요한 저장 데이터의 범위와 테이블 구조를 최소 기준으로 정의한다.
+작성일: 2026-03-19  
+목적: 현재 모니터링 웹 기준에서 DB를 반드시 써야 하는 범위만 다시 정의한다.
 
-## 1. 설계 원칙
+## 1. 현재 결론
 
-- 사용자 계정 저장은 1차 범위에서 제외
-- 서비스는 공용 데이터 조회 중심으로 설계
-- 예측 결과와 실시간 재고는 분리 저장
-- 스테이션 마스터와 운영 상태는 별도 관리
-- 통계는 원시 로그보다 집계 결과 저장을 우선
+이 서비스는 DB 중심 서비스가 아니다.
 
-## 2. 저장 대상
+- 로그인 없음
+- 사용자 저장 기능 없음
+- 실시간 데이터는 외부 API 기준
+- 정적 마스터는 로컬 JSON 또는 선탑재 데이터 기준
+- 예측은 서버 런타임에서 계산
 
-### 반드시 저장
+따라서 현재 단계에서 DB는 **필수 계층이 아니라 선택적 영속 계층**이다.
 
-- 서비스 대상 스테이션 마스터
-- 스테이션 API 매핑 정보
-- 실시간 재고 캐시
-- 예측 결과
-- 통계 집계 결과
+## 2. DB 없이 처리하는 항목
 
-### 선택 저장
+### 로컬 또는 메모리 기준
 
-- 시스템 호출 로그
-- 관리자 작업 이력
+- 스테이션 마스터
+- 위경도, 이름, 주소
+- 군집 코드
+- 거치대 수
+- 정책 기본값
+- 모델 메타데이터
 
-### 현재 제외
+### 외부 API 기준
 
-- 회원 정보
-- 사용자 즐겨찾기
-- 개인 설정
+- 실시간 재고
+- 운영 상태
+- 날씨 또는 예보
 
-## 3. 스테이션 데이터 구분
+## 3. DB에 남길 수 있는 최소 항목
 
-| 구분 | stations (161개) | 실전 웹 스테이션 |
-|------|------------------|-------------------|
-| **용도** | ML 학습·예측용 (2023~2025 공통 스테이션) | 현재 강남구 전체 대여소 조회 |
-| **출처** | DB 고정 (학습/예측 파이프라인용) | 외부 API 실시간/주기 수집 |
-| **특징** | 예측 모델과 1:1 매칭 | 운영 중인 실제 대여소 목록 |
+현재 기준으로 저장 가치가 있는 항목은 예측 로그 하나뿐이다.
 
-- **161개**: ddri_work ML 프로젝트에서 사용. 학습·예측용 공통 스테이션.
-- **실전 웹**: 외부 API(서울시 따릉이 등)를 통해 **현재 강남구 전체 스테이션**을 수집·갱신해야 함.
-
-## 4. 테이블 목록
-
-### 1. `stations`
+### `prediction_logs`
 
 역할:
 
-- **ML용**: 2023~2025 공통 161개 스테이션 (학습·예측 파이프라인)
-- **실전 웹용**: 외부 API에서 수집한 현재 강남구 전체 스테이션 (별도 수집/갱신 로직 필요)
+- 어떤 시점에 어떤 스테이션에 대해 어떤 예측을 반환했는지 보존
+- 나중에 공공데이터 포털 실제값과 배치 매칭해 평가 가능
 
 주요 컬럼:
 
 - `id`
+- `prediction_time`
+- `target_time`
 - `station_id`
-- `api_station_id`
-- `station_name`
-- `district_name`
-- `address`
-- `latitude`
-- `longitude`
-- `cluster_code`
-- `operational_status`
-- `is_service_target`
-- `created_at`
-- `updated_at`
-
-### 2. `station_api_mappings`
-
-역할:
-
-- 숫자형 `station_id`와 외부 API의 `ST-xxxx` 계열 ID 매핑 관리
-
-주요 컬럼:
-
-- `id`
-- `station_id`
-- `resolved_api_station_id`
-- `source_api`
-- `match_status`
-- `exception_reason`
-- `verified_at`
-
-### 3. `realtime_station_stock`
-
-역할:
-
-- 실시간 재고 캐시 저장
-
-주요 컬럼:
-
-- `id`
-- `station_id`
-- `stock_datetime`
-- `current_bike_stock`
-- `parking_bike_total_count`
-- `shared_count`
-- `operational_status`
-- `raw_payload_hash`
-- `created_at`
-
-### 4. `station_demand_forecasts`
-
-역할:
-
-- 시간 단위 예측 결과 저장
-
-주요 컬럼:
-
-- `id`
-- `station_id`
-- `target_datetime`
-- `predicted_rental_count`
-- `predicted_return_count`
-- `predicted_remaining_bikes`
-- `availability_level`
+- `horizon_hours`
+- `predicted_stock`
+- `predicted_net_change`
 - `model_version`
-- `cluster_code`
+- `source_updated_at`
 - `created_at`
 
-### 5. `station_risk_snapshots`
+## 4. 현재 제외 항목
 
-역할:
+아래 항목은 현재 1차 범위에서 DB 테이블로 두지 않는다.
 
-- 운영자용 재배치 판단 결과 저장
+- `stations`
+- `station_api_mappings`
+- `realtime_station_stock`
+- `station_demand_forecasts`
+- `station_risk_snapshots`
+- `statistics_snapshots`
+- 회원/세션/즐겨찾기 계열 테이블
 
-주요 컬럼:
+이유:
 
-- `id`
-- `station_id`
-- `base_datetime`
-- `current_bike_stock`
-- `predicted_demand`
-- `stock_gap`
-- `risk_score`
-- `reallocation_priority`
-- `operational_status`
-- `created_at`
+- 정적 데이터는 로컬 보관이 더 단순하다
+- 실시간 데이터는 외부 API가 기준 진실이다
+- 통계 페이지와 사용자 저장 기능이 없다
+- 관리자 수정 기능이 아직 없다
 
-### 6. `statistics_snapshots`
+## 5. 저장 전략
 
-역할:
+### 운영 중
 
-- 통계 페이지에서 사용하는 집계 결과 저장
+- 예측 로그만 저장하거나
+- 아예 저장하지 않고 무상태 운영할 수 있다
 
-주요 컬럼:
+### 사후 평가
 
-- `id`
-- `base_date`
-- `base_hour`
-- `cluster_code`
-- `metric_key`
-- `metric_value`
-- `dimension_key`
-- `dimension_value`
-- `created_at`
+- 공개 데이터 포털의 실제 이력과
+- `station_id + target_time` 기준으로 매칭
+- 예측 정확도 평가
 
-## 5. 테이블별 관계 요약
+## 6. 도입 순서
 
-- `stations`는 기준 마스터 테이블
-- `station_api_mappings`는 `stations.station_id`를 참조
-- `realtime_station_stock`는 `stations.station_id`를 참조
-- `station_demand_forecasts`는 `stations.station_id`를 참조
-- `station_risk_snapshots`는 `stations.station_id`를 참조
-- `statistics_snapshots`는 집계성 테이블로 직접 참조보다는 조회용으로 사용
+### 1단계
 
-## 6. 저장 전략
+- DB 없이 운영
+- 로컬 마스터 + 외부 API + 모델 추론
 
-### 실시간 재고
+### 2단계
 
-- 원본 API 응답 전체 저장보다 필요한 컬럼만 캐시
-- 일정 주기로 갱신
+- 필요 시 `prediction_logs` 추가
 
-### 예측 결과
+### 3단계
 
-- 요청 시 실시간 계산 방식 또는 사전 배치 생성 방식 중 선택 가능
-- 1차는 특정 시간대 기준 배치 저장이 더 단순
+- 관리자 정책 수정, 운영 이력, 통계가 필요해질 때 확장
 
-### 통계 집계
+## 7. 현재 결론
 
-- 화면 응답 속도를 위해 사전 집계 테이블 유지 권장
-
-## 7. 1차 기술 선택 권장
-
-- DB:
-  - PostgreSQL
-- 이유:
-  - 관계형 구조에 적합
-  - 통계/집계 질의 처리에 안정적
-  - 추후 PostGIS 확장 가능
-
-## 8. 현재 결론
-
-이 서비스는 사용자 중심 서비스라기보다 스테이션 중심 데이터 서비스다.  
-따라서 1차 DB 설계는 `회원 테이블`보다 `스테이션/재고/예측/통계` 네 축을 먼저 닫는 것이 맞다.
+현재 서비스에서 DB 스키마는 “서비스 전체 저장소”가 아니라 “선택적 예측 로그 저장소” 수준으로 정의하는 것이 맞다.

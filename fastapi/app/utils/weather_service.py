@@ -44,14 +44,14 @@ class WeatherService:
             - start_date가 None이면: 오늘 포함 7일치 모두 반환
             - start_date가 지정되면: 해당 날짜부터 남은 날짜만 반환
             각 Dict: dt, weather_datetime, weather_type, weather_type_en, weather_low,
-                    weather_high, icon_code, icon_url, weather_code
+                    weather_high, precipitation_probability_max, icon_code, icon_url, weather_code
         """
         params = {
             "latitude": lat,
             "longitude": lon,
             "timezone": timezone,
-            "daily": "temperature_2m_max,temperature_2m_min,weather_code",
-            "forecast_days": 16,
+            "daily": "temperature_2m_max,temperature_2m_min,weather_code,precipitation_probability_max",
+            "forecast_days": 7,
         }
 
         try:
@@ -66,9 +66,10 @@ class WeatherService:
             temp_max = data["daily"].get("temperature_2m_max", [])
             temp_min = data["daily"].get("temperature_2m_min", [])
             weather_codes = data["daily"].get("weather_code", [])
+            precipitation_probabilities = data["daily"].get("precipitation_probability_max", [])
 
             today = datetime.now().date()
-            max_date = today + timedelta(days=15)
+            max_date = today + timedelta(days=6)
 
             start_date_only = None
             if start_date:
@@ -85,7 +86,7 @@ class WeatherService:
                 if start_date_only < today:
                     raise ValueError("과거 날짜의 실시간 예보는 조회할 수 없습니다.")
                 if start_date_only > max_date:
-                    raise ValueError(f"예보는 오늘부터 최대 16일까지만 조회 가능합니다. (요청: {start_date_only})")
+                    raise ValueError(f"예보는 오늘부터 최대 7일까지만 조회 가능합니다. (요청: {start_date_only})")
 
             result = []
             for i, time_str in enumerate(times):
@@ -100,10 +101,17 @@ class WeatherService:
 
                 weather_low = temp_min[i] if i < len(temp_min) else None
                 weather_high = temp_max[i] if i < len(temp_max) else None
-                wmo_code = int(weather_codes[i]) if i < len(weather_codes) else 0
+                precipitation_probability = (
+                    precipitation_probabilities[i] if i < len(precipitation_probabilities) else None
+                )
+                raw_weather_code = weather_codes[i] if i < len(weather_codes) else 0
+                wmo_code = int(raw_weather_code) if raw_weather_code is not None else 0
 
                 weather_low = float(weather_low) if weather_low is not None else 0.0
                 weather_high = float(weather_high) if weather_high is not None else 0.0
+                precipitation_probability = (
+                    float(precipitation_probability) if precipitation_probability is not None else 0.0
+                )
                 if weather_low > weather_high:
                     weather_low, weather_high = weather_high, weather_low
 
@@ -116,6 +124,7 @@ class WeatherService:
                     "weather_type_en": weather_main,
                     "weather_low": weather_low,
                     "weather_high": weather_high,
+                    "precipitation_probability_max": precipitation_probability,
                     "icon_code": icon_code,
                     "icon_url": get_weather_icon_url(icon_code),
                     "weather_code": wmo_code,
@@ -171,3 +180,120 @@ class WeatherService:
             raise ValueError(f"해당 날짜({target_date_only})의 날씨 데이터를 찾을 수 없습니다.")
 
         return forecast_list[0]
+
+    def fetch_single_datetime_weather(
+        self,
+        lat: float = DEFAULT_LAT,
+        lon: float = DEFAULT_LON,
+        target_datetime: Optional[datetime] = None,
+        timezone: str = DEFAULT_TIMEZONE,
+    ) -> Dict:
+        """
+        Open-Meteo API에서 특정 시각에 가장 가까운 시간별 예보 1건을 가져온다.
+
+        - 시간별 날씨/강수확률은 선택 시각 기준으로 제공
+        - 최고/최저 기온은 같은 날짜의 일별 예보에서 보강
+        """
+        now = datetime.now()
+        target_dt = target_datetime or now
+
+        if isinstance(target_dt, str):
+            try:
+                target_dt = datetime.fromisoformat(target_dt)
+            except ValueError:
+                raise ValueError(f"날짜 형식이 올바르지 않습니다. (ISO datetime): {target_datetime}")
+
+        if target_dt.tzinfo is not None:
+            target_dt = target_dt.astimezone().replace(tzinfo=None)
+
+        today = now.date()
+        max_date = today + timedelta(days=6)
+        target_date = target_dt.date()
+
+        if target_date < today:
+            raise ValueError("과거 날짜의 실시간 예보는 조회할 수 없습니다.")
+        if target_date > max_date:
+            raise ValueError(f"예보는 오늘부터 최대 7일까지만 조회 가능합니다. (요청: {target_date})")
+
+        params = {
+            "latitude": lat,
+            "longitude": lon,
+            "timezone": timezone,
+            "hourly": "temperature_2m,weather_code,precipitation_probability",
+            "forecast_days": 7,
+        }
+
+        try:
+            response = requests.get(OPEN_METEO_BASE_URL, params=params, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            if "hourly" not in data or "time" not in data["hourly"]:
+                raise ValueError("API 응답에 hourly 데이터가 없습니다.")
+
+            times = data["hourly"]["time"]
+            temperatures = data["hourly"].get("temperature_2m", [])
+            weather_codes = data["hourly"].get("weather_code", [])
+            precipitation_probabilities = data["hourly"].get("precipitation_probability", [])
+
+            best_index = None
+            best_diff_seconds = None
+            for i, time_str in enumerate(times):
+                try:
+                    dt = datetime.strptime(time_str, "%Y-%m-%dT%H:%M")
+                except ValueError:
+                    continue
+
+                if dt.date() != target_date:
+                    continue
+
+                diff_seconds = abs((dt - target_dt).total_seconds())
+                if best_diff_seconds is None or diff_seconds < best_diff_seconds:
+                    best_index = i
+                    best_diff_seconds = diff_seconds
+
+            if best_index is None:
+                raise ValueError(f"해당 시각({target_dt.isoformat()})의 시간별 날씨 데이터를 찾을 수 없습니다.")
+
+            best_dt = datetime.strptime(times[best_index], "%Y-%m-%dT%H:%M")
+            raw_weather_code = weather_codes[best_index] if best_index < len(weather_codes) else 0
+            wmo_code = int(raw_weather_code) if raw_weather_code is not None else 0
+            precipitation_probability = (
+                float(precipitation_probabilities[best_index])
+                if best_index < len(precipitation_probabilities)
+                and precipitation_probabilities[best_index] is not None
+                else 0.0
+            )
+            temperature = (
+                float(temperatures[best_index])
+                if best_index < len(temperatures) and temperatures[best_index] is not None
+                else 0.0
+            )
+
+            daily_forecast = self.fetch_single_day_weather(
+                lat=lat,
+                lon=lon,
+                target_date=target_dt,
+                timezone=timezone,
+            )
+
+            weather_main, icon_code = get_weather_main_from_wmo(wmo_code)
+
+            return {
+                "dt": int(best_dt.timestamp()),
+                "weather_datetime": best_dt,
+                "weather_type": get_weather_type_korean(weather_main),
+                "weather_type_en": weather_main,
+                "weather_low": daily_forecast["weather_low"],
+                "weather_high": daily_forecast["weather_high"],
+                "temperature": temperature,
+                "precipitation_probability": precipitation_probability,
+                "icon_code": icon_code,
+                "icon_url": get_weather_icon_url(icon_code),
+                "weather_code": wmo_code,
+            }
+
+        except requests.RequestException as e:
+            raise requests.RequestException(f"Open-Meteo API 요청 실패: {str(e)}") from e
+        except (KeyError, ValueError, TypeError) as e:
+            raise ValueError(f"API 응답 파싱 실패: {str(e)}") from e

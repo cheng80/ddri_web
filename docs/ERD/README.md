@@ -1,12 +1,12 @@
 # ERD (Entity Relationship Diagram)
 
-Mermaid 스크립트로 DDRI 데이터베이스 ERD를 정의한다.
+Mermaid 스크립트로 DDRI 최소 영속 구조 ERD를 정의한다.
 
 ## 파일
 
 | 파일 | 설명 |
 |------|------|
-| ERD.mmd | Mermaid erDiagram 스크립트 |
+| ERD.mmd | 현재 기준 최소 ERD (`prediction_logs`) |
 
 ## 사용법
 
@@ -16,6 +16,6 @@ Mermaid 스크립트로 DDRI 데이터베이스 ERD를 정의한다.
 
 ## 참조
 
-- `fastapi/mysql/init_schema.sql` — 실제 MySQL DDL
-- `docs/02_web_service_final/04_ddri_database_design.md` — 테이블 설계
-- `docs/DBML/mysql.dbml` — DBML 스키마
+- [init_schema.sql](/Users/cheng80/Desktop/ddri_web/fastapi/mysql/init_schema.sql) — 실제 MySQL DDL
+- [04_ddri_database_design.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/04_ddri_database_design.md) — 최소 DB 설계
+- [mysql.dbml](/Users/cheng80/Desktop/ddri_web/docs/DBML/mysql.dbml) — DBML 스키마

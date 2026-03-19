@@ -1,3 +1,4 @@
+// DDRI 관리자 페이지: 제어, 요약 카드, DataTable, 예외, 맵 플레이스홀더
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -6,14 +7,16 @@ import '../core/design_token.dart';
 import 'admin/admin_control_area.dart';
 import 'admin/admin_exceptions_section.dart';
 import 'admin/admin_map_placeholder.dart';
-import 'admin/admin_page_controller.dart';
+import '../vm/admin_page_controller.dart';
 import 'admin/admin_station_list.dart';
 import 'admin/admin_summary_cards.dart';
 
-/// 관리자 페이지: 재배치 판단 목록
+/// 관리자 페이지: 재배치 판단 목록.
+/// AdminControlArea → AdminSummaryCards → AdminStationList → AdminExceptionsSection → AdminMapPlaceholder.
 class AdminView extends StatelessWidget {
   const AdminView({super.key});
 
+  /// 화면 너비에 따른 패딩
   EdgeInsets _pagePadding(double width) {
     if (width >= DesignToken.breakpointDesktop) {
       return const EdgeInsets.symmetric(horizontal: 40, vertical: 32);

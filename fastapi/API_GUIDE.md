@@ -1,40 +1,86 @@
-# DDRI FastAPI 서버
+# DDRI FastAPI 가이드
 
-강남구 따릉이 대여소 조회·재배치 지원 웹서비스를 위한 FastAPI 백엔드입니다.
+작성일: 2026-03-20  
+목적: 현재 `ddri_web` 기준 FastAPI 백엔드 구조와 실행 방법을 정리한다.
 
-## 프로젝트 구조
+## 1. 현재 서버 역할
 
-```
+FastAPI는 현재 아래 역할을 맡는다.
+
+- 사용자 조회 API 제공
+- 관리자 조회 API 제공
+- 스테이션 기본 정보 API 제공
+- 날씨 API 제공
+- 향후 외부 실시간 재고 API와 예측 모델을 연결하는 런타임 서버 역할
+
+현재 서비스는 조회형 웹 기준이다.
+
+- 로그인 없음
+- 사용자 저장 기능 없음
+- 외부 API + 로컬 마스터 + 서버 추론 구조
+- DB는 필수 계층이 아니며, 필요 시 `prediction_logs`만 저장
+
+## 2. 프로젝트 구조
+
+```text
 fastapi/
 ├── app/
-│   ├── api/                  # API 엔드포인트 라우터
-│   │   ├── __init__.py
-│   │   ├── weather.py        # 날씨 API (Open-Meteo)
-│   │   ├── ddri_user.py      # 사용자용: 주변 대여소 조회
-│   │   ├── ddri_admin.py     # 관리자용: 위험 대여소 조회
-│   │   └── ddri_stations.py  # 대여소 목록 조회
-│   ├── database/             # 데이터베이스 연결 설정
-│   │   ├── __init__.py
-│   │   ├── connection.py     # 운영용 DB 연결
-│   │   └── connection_local.py  # 로컬 개발용 DB 연결
-│   ├── utils/                # 유틸리티
+│   ├── api/
+│   │   ├── ddri_user.py
+│   │   ├── ddri_admin.py
+│   │   ├── ddri_stations.py
+│   │   └── weather.py
+│   ├── database/
+│   │   ├── connection.py
+│   │   └── connection_local.py
+│   ├── utils/
 │   │   ├── weather_service.py
 │   │   └── weather_mapping.py
-│   └── main.py               # FastAPI 애플리케이션 진입점
+│   └── main.py
 ├── mysql/
-│   └── init_schema.sql       # DDRI 데이터베이스 초기화 스키마 (DDL)
-├── requirements.txt          # Python 의존성
-└── API_GUIDE.md              # 이 파일
+│   └── init_schema.sql
+└── API_GUIDE.md
 ```
 
-## 설치 및 실행
+## 3. 현재 등록된 라우터
 
-### 1. 가상 환경 생성 및 활성화
+`app/main.py` 기준:
+
+- `GET /`
+- `GET /health`
+- `GET /v1/user/stations/nearby`
+- `GET /v1/admin/stations/risk`
+- `GET /v1/stations`
+- `GET /v1/weather/direct`
+- `GET /v1/weather/direct/single`
+
+## 4. 현재 구현 상태
+
+### 구현 완료
+
+- 사용자 조회 목업 API
+- 관리자 조회 목업 API
+- 스테이션 기본 정보 목업 API
+- Open-Meteo 기반 날씨 API
+- Swagger / ReDoc 노출
+- CORS 개발 설정
+
+### 아직 미완료
+
+- 외부 실시간 재고 API 연동
+- 로컬 마스터 로딩 구조
+- 예측 모델 `joblib` 런타임 연결
+- 예외/폴백 처리 고도화
+- 필요 시 `prediction_logs` 저장
+
+## 5. 설치 및 실행
+
+### 1. 가상 환경
 
 ```bash
 cd fastapi
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate
 ```
 
 ### 2. 의존성 설치
@@ -43,9 +89,9 @@ source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-### 3. 환경변수 설정
+### 3. 환경변수
 
-`fastapi/.env` 파일을 생성하고 DB 및 API 키를 설정합니다.
+`fastapi/.env` 예시:
 
 ```env
 DB_HOST=your_host
@@ -53,63 +99,72 @@ DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=ddri_db
 DB_PORT=13306
-OPENMETEO_API_KEY=  # Open-Meteo (선택)
 ```
 
-### 4. 데이터베이스 초기화
+설명:
+- 현재 DB는 필수는 아니다
+- DB를 안 쓰는 동안에도 `.env`는 남겨둘 수 있다
+- 추후 `prediction_logs` 저장 시 사용 가능
 
-```bash
-mysql -u your_user -p < mysql/init_schema.sql
-```
-
-### 5. 서버 실행
+### 4. 서버 실행
 
 ```bash
 cd fastapi
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 6. API 문서 확인
+### 5. 문서 확인
 
-- Swagger UI: http://localhost:8000/docs
-- ReDoc: http://localhost:8000/redoc
+- Swagger UI: `http://localhost:8000/docs`
+- ReDoc: `http://localhost:8000/redoc`
 
-## 현재 엔드포인트
+## 6. 데이터 계층 원칙
 
-### 기본
-- `GET /` - API 정보
-- `GET /health` - 헬스 체크
+### 현재 기준
 
-### Weather (`/v1/weather`)
-- `GET /v1/weather/current?lat={lat}&lon={lon}` - 현재 날씨 조회
+- 실시간 재고: 외부 API 기준
+- 날씨: Open-Meteo 기준
+- 스테이션 마스터: 로컬 데이터 또는 별도 로딩 구조 기준
+- 예측 모델: 서버 로컬 파일 로드 예정
 
-### DDRI User (`/v1/user`)
-- `GET /v1/user/stations/nearby?lat={lat}&lon={lon}&radius_km={km}` - 주변 대여소 조회
+### DB 사용
 
-### DDRI Admin (`/v1/admin`)
-- `GET /v1/admin/stations/risk` - 위험 대여소 목록 조회
+현재는 필수가 아니다.
 
-### DDRI Stations (`/v1/stations`)
-- `GET /v1/stations` - 대여소 목록 조회 (페이지네이션 지원)
+`mysql/init_schema.sql`은 최소 스키마만 포함한다.
 
-## 데이터베이스 설정
+- `prediction_logs`
 
-`app/database/connection.py`는 `.env`의 `DB_*` 환경변수를 사용합니다.  
-로컬 개발 시 `connection_local.py`를 참고하여 설정을 분기할 수 있습니다.
+즉 예전처럼 `stations`, `station_risk_snapshots`, `realtime_station_stock`를 전부 DB에 넣는 구조가 아니라, 필요 시 예측 로그만 저장하는 방향이다.
 
-`mysql/init_schema.sql` 실행 시 DDRI용 테이블(stations, station_risk_snapshots 등)이 생성됩니다.
+## 7. 날씨 API 역할
 
-## CORS 설정
+날씨는 현재 두 가지 목적에 사용한다.
 
-개발 환경에서는 모든 origin을 허용합니다. 프로덕션에서는 Flutter 웹 도메인으로 제한하세요.
+1. 모델 입력 피처
+2. 화면 표시 정보
 
-## 엔드포인트 추가 방법
+화면에서는 다음 두 층으로 쓴다.
 
-1. `app/api/`에 새 라우터 파일 생성
-2. `main.py`에서 `app.include_router(...)` 등록
-3. DB 사용 시 `from app.database.connection import connect_db` 사용
+- 주간 일별 날씨
+- 선택 날짜/시간 기준 상세 날씨
 
-## 참고
+즉 날씨 API는 더 이상 ML 입력 전용이 아니다.
 
-- API 문서: `/docs`, `/redoc`
-- MySQL 8.0, utf8mb4 인코딩
+## 8. 개발 시 참고
+
+- 기준 설계 문서:
+  - [01_screen_design_and_scope.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/01_screen_design_and_scope.md)
+  - [02_system_design.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/02_system_design.md)
+  - [03_api_and_runtime_contract.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/03_api_and_runtime_contract.md)
+- API 명세:
+  - [API_SPEC.md](/Users/cheng80/Desktop/ddri_web/docs/api/API_SPEC.md)
+  - [openapi.yaml](/Users/cheng80/Desktop/ddri_web/docs/api/openapi.yaml)
+
+## 9. 다음 작업
+
+1. 외부 실시간 재고 API 연동
+2. 날씨 응답을 화면 구조와 맞게 정리
+3. 로컬 마스터 JSON 로더 추가
+4. 예측 모델 런타임 연결
+5. 필요 시 `prediction_logs` 저장 연결

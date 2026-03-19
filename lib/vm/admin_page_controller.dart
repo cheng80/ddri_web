@@ -1,10 +1,12 @@
+// DDRI 관리자 컨트롤러: 기준 시각, 긴급만, 행정동, 정렬, /v1/admin/stations/risk
 import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 
-import '../../common/api/ddri_api_client.dart';
-import '../../common/api/models/station_models.dart';
+import '../common/api/ddri_api_client.dart';
+import '../common/api/models/station_models.dart';
 
-/// 관리자 페이지 상태·로직 (GetX)
+/// 관리자 페이지 상태·로직 (GetX).
+/// onReady에서 fetchRiskStations 자동 호출.
 class AdminPageController extends GetxController {
   AdminPageController({DdriApiClient? apiClient})
       : _api = apiClient ?? DdriApiClient();
@@ -26,6 +28,7 @@ class AdminPageController extends GetxController {
   final RxString errorMessage = ''.obs;
   final RxBool exceptionsExpanded = false.obs;
 
+  /// API용 ISO 8601 형식
   String get baseDatetimeIso =>
       '${baseDatetime.value.toIso8601String().substring(0, 19)}+09:00';
 

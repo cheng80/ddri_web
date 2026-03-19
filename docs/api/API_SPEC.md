@@ -1,93 +1,101 @@
 # DDRI API 명세서
 
-강남구 따릉이 대여소 조회·재배치 지원 웹서비스 REST API 명세.
+작성일: 2026-03-20  
+목적: 현재 DDRI 웹서비스에서 사용하는 조회형 API를 화면 기준으로 정리한다.
 
----
+## 문서 기준
 
-## 문서 정보
+- API 버전: `v1`
+- 인증: 없음
+- 응답 형식: JSON
+- 서비스 성격: 비로그인 모니터링 웹
 
-| 항목 | 내용 |
-|------|------|
-| **문서 버전** | 1.0.0 |
-| **API 버전** | v1 |
-| **최종 수정일** | 2026-03-18 |
-| **기준 문서** | `openapi.yaml` (OpenAPI 3.0) |
+현재 기준 설계 문서:
 
----
+- [01_screen_design_and_scope.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/01_screen_design_and_scope.md)
+- [02_system_design.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/02_system_design.md)
+- [03_api_and_runtime_contract.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/03_api_and_runtime_contract.md)
 
-## 1. 개요
+## 1. API 목록
 
-| 항목 | 내용 |
-|------|------|
-| **Base URL** | `http://localhost:8000/v1` (로컬 개발) |
-| **인증** | 없음 (조회 전용) |
-| **데이터 형식** | JSON |
-| **문자 인코딩** | UTF-8 |
-
----
-
-## 2. 기능별 API 목록
-
-### 2.1 사용자 페이지 (ddri-user)
+### 기본
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| GET | `/user/stations/nearby` | 근처 대여소 조회 |
+| GET | `/` | API 정보 |
+| GET | `/health` | 헬스 체크 |
 
-### 2.2 관리자 페이지 (ddri-admin)
-
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/admin/stations/risk` | 재배치 판단 목록 조회 |
-
-### 2.3 스테이션 마스터 (ddri-stations)
+### 사용자 페이지
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| GET | `/stations` | 대여소 목록 조회 (161개) |
+| GET | `/v1/user/stations/nearby` | 위치 기준 주변 대여소 조회 |
 
-### 2.4 날씨 (weather)
+### 관리자 페이지
 
 | 메서드 | 경로 | 설명 |
 |--------|------|------|
-| GET | `/weather/direct` | 날씨 예보 (7일) |
-| GET | `/weather/direct/single` | 특정일 날씨 조회 |
+| GET | `/v1/admin/stations/risk` | 기준 시각 부족 위험 목록 조회 |
 
----
+### 스테이션 마스터
 
-## 3. API 상세 명세
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| GET | `/v1/stations` | 화면용 스테이션 기본 정보 조회 |
 
----
+### 날씨
 
-### 3.1 근처 대여소 조회
+| 메서드 | 경로 | 설명 |
+|--------|------|------|
+| GET | `/v1/weather/direct` | 7일 일별 날씨 조회 |
+| GET | `/v1/weather/direct/single` | 특정 날짜 또는 시각 기준 날씨 조회 |
 
-**기능**: 사용자 페이지. 내 위치 근처 대여소 목록 (거리순, 지정 시간대 예측)
+## 2. 사용자 API
 
-| 항목 | 내용 |
-|------|------|
-| **요청 방식** | GET |
-| **경로** | `/v1/user/stations/nearby` |
+### `GET /v1/user/stations/nearby`
 
-#### 요청 예시
+용도:
+- 사용자 위치 또는 주소 위치 기준 대여소 조회
+- 현재 재고와 예측 결과 표시
+- 화면에서 주간 날씨와 선택 시각 예상 날씨를 함께 표시 가능
 
-```
-GET /v1/user/stations/nearby?lat=37.5012&lng=127.0396&target_datetime=2026-03-18T18:00:00%2B09:00&limit=20
-```
+#### 요청 파라미터
 
 | 파라미터 | 타입 | 필수 | 설명 |
 |----------|------|------|------|
-| lat | number | ✓ | 위도 |
-| lng | number | ✓ | 경도 |
-| target_datetime | string | ✓ | 예측 기준 시각. ISO 8601 형식 (예: `2026-03-18T18:00:00+09:00`) |
-| limit | integer | | 반환 개수. 기본 20, 1~50 |
-| radius_m | integer | | 반경(m). 미지정 시 전체 중 거리순 |
+| `lat` | number | ✓ | 위도 |
+| `lng` | number | ✓ | 경도 |
+| `target_datetime` | string | ✓ | 조회 기준 시각, ISO 8601 |
+| `limit` | integer | | 반환 개수, 기본 20 |
+| `radius_m` | integer | | 반경(m) |
 
-#### 응답 예시 (200 OK)
+#### 응답 예시
 
 ```json
 {
-  "target_datetime": "2026-03-18T18:00:00+09:00",
-  "user_location": { "lat": 37.5012, "lng": 127.0396 },
+  "target_datetime": "2026-03-20T18:00:00+09:00",
+  "user_location": {
+    "lat": 37.5012,
+    "lng": 127.0396
+  },
+  "weather": {
+    "weekly_forecast": [
+      {
+        "date": "2026-03-20",
+        "weather_type": "맑음",
+        "weather_low": 4,
+        "weather_high": 13,
+        "icon_url": "https://..."
+      }
+    ],
+    "selected_forecast": {
+      "weather_datetime": "2026-03-20T18:00:00+09:00",
+      "weather_type": "구름많음",
+      "weather_low": 6,
+      "weather_high": 14,
+      "icon_url": "https://..."
+    }
+  },
   "items": [
     {
       "station_id": 2328,
@@ -105,71 +113,67 @@ GET /v1/user/stations/nearby?lat=37.5012&lng=127.0396&target_datetime=2026-03-18
     }
   ],
   "exceptions": [
-    { "station_id": 2314, "reason": "실시간 비노출" }
+    {
+      "station_id": 2314,
+      "reason": "실시간 비노출"
+    }
   ]
 }
 ```
 
-#### 필드 설명
+#### 응답 해석
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| target_datetime | string | 예측 기준 시각. ISO 8601 형식 |
-| user_location | object | 요청한 사용자 위치. lat, lng |
-| items | array | 대여소 목록 (거리순) |
-| items[].station_id | integer | 대여소 고유 ID |
-| items[].station_name | string | 대여소명 |
-| items[].address | string | 주소 |
-| items[].latitude | number | 위도 |
-| items[].longitude | number | 경도 |
-| items[].distance_m | number | 사용자 위치에서 대여소까지 거리(m) |
-| items[].current_bike_stock | number | 실시간 보유 대수 |
-| items[].predicted_rental_count | number | 해당 시간대 예측 대여량 |
-| items[].predicted_remaining_bikes | number | 예상 잔여 수 (current - predicted) |
-| items[].bike_availability_flag | boolean | 대여 가능 여부 |
-| items[].availability_level | string | `sufficient` \| `normal` \| `low` |
-| items[].operational_status | string | `operational` \| `비활성` |
-| exceptions | array | 예외 대여소 (실시간 비노출 등) |
-| exceptions[].station_id | integer | 예외 대여소 ID |
-| exceptions[].reason | string | 예외 사유 |
+- `weather.weekly_forecast`
+  - 기본으로 보여줄 주간 일별 날씨
+- `weather.selected_forecast`
+  - 사용자가 선택한 날짜/시간 기준 예상 날씨
+- `items`
+  - 거리순 대여소 목록
+- `exceptions`
+  - 실시간 비노출 등 예외 스테이션
 
-#### 상태코드
+## 3. 관리자 API
 
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
+### `GET /v1/admin/stations/risk`
 
----
+용도:
+- 기준 시각에 부족 위험이 큰 대여소 목록 조회
+- 위험도 판단과 함께 주간 날씨, 기준 시각 날씨 확인
 
-### 3.2 재배치 판단 목록 조회
-
-**기능**: 관리자 페이지. 시간대별 위험도·우선순위
-
-| 항목 | 내용 |
-|------|------|
-| **요청 방식** | GET |
-| **경로** | `/v1/admin/stations/risk` |
-
-#### 요청 예시
-
-```
-GET /v1/admin/stations/risk?base_datetime=2026-03-18T18:00:00%2B09:00&sort_by=risk_score&sort_order=desc
-```
+#### 요청 파라미터
 
 | 파라미터 | 타입 | 필수 | 설명 |
 |----------|------|------|------|
-| base_datetime | string | ✓ | 기준 시각. ISO 8601 형식 |
-| urgent_only | boolean | | true 시 위험 대여소만 |
-| district_name | string | | 행정동 필터 (예: 역삼동) |
-| cluster_code | string | | 지역 특성 필터 (예: cluster00) |
-| sort_by | string | | `risk_score` \| `reallocation_priority` \| `stock_gap` |
-| sort_order | string | | `asc` \| `desc` |
+| `base_datetime` | string | ✓ | 기준 시각, ISO 8601 |
+| `urgent_only` | boolean | | 위험 대여소만 조회 |
+| `district_name` | string | | 행정동 필터 |
+| `cluster_code` | string | | 보조 필터 |
+| `sort_by` | string | | `risk_score` \| `reallocation_priority` \| `stock_gap` |
+| `sort_order` | string | | `asc` \| `desc` |
 
-#### 응답 예시 (200 OK)
+#### 응답 예시
 
 ```json
 {
-  "base_datetime": "2026-03-18T18:00:00+09:00",
+  "base_datetime": "2026-03-20T18:00:00+09:00",
+  "weather": {
+    "weekly_forecast": [
+      {
+        "date": "2026-03-20",
+        "weather_type": "맑음",
+        "weather_low": 4,
+        "weather_high": 13,
+        "icon_url": "https://..."
+      }
+    ],
+    "selected_forecast": {
+      "weather_datetime": "2026-03-20T18:00:00+09:00",
+      "weather_type": "구름많음",
+      "weather_low": 6,
+      "weather_high": 14,
+      "icon_url": "https://..."
+    }
+  },
   "summary": {
     "total_count": 161,
     "risk_count": 23,
@@ -191,60 +195,30 @@ GET /v1/admin/stations/risk?base_datetime=2026-03-18T18:00:00%2B09:00&sort_by=ri
     }
   ],
   "exceptions": [
-    { "station_id": 2314, "reason": "실시간 비노출" }
+    {
+      "station_id": 2314,
+      "reason": "실시간 비노출"
+    }
   ]
 }
 ```
 
-#### 필드 설명
+## 4. 스테이션 마스터 API
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| base_datetime | string | 기준 시각. ISO 8601 형식 |
-| summary.total_count | integer | 전체 대여소 수 |
-| summary.risk_count | integer | 위험 대여소 수 |
-| summary.exception_count | integer | 예외 대여소 수 |
-| summary.avg_risk_score | number | 평균 위험도 점수 (0~1) |
-| items[].station_id | integer | 대여소 고유 ID |
-| items[].station_name | string | 대여소명 |
-| items[].district_name | string | 행정동명 |
-| items[].cluster_code | string | 지역 특성 코드 (cluster00~04) |
-| items[].current_bike_stock | number | 실시간 보유 대수 |
-| items[].predicted_demand | number | 해당 시간대 예측 수요(대여량) |
-| items[].stock_gap | number | current_bike_stock - predicted_demand (음수면 부족) |
-| items[].risk_score | number | 위험도 점수 (0~1, 높을수록 위험) |
-| items[].reallocation_priority | integer | 재배치 우선순위 (1이 최우선) |
-| items[].operational_status | string | `operational` \| `비활성` |
+### `GET /v1/stations`
 
-#### 상태코드
+용도:
+- 화면용 기본 스테이션 정보 조회
+- 로컬 선탑재 데이터와 비교 가능
 
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
-
----
-
-### 3.3 스테이션 마스터 조회
-
-**기능**: 161개 대여소 목록 (필터 가능)
-
-| 항목 | 내용 |
-|------|------|
-| **요청 방식** | GET |
-| **경로** | `/v1/stations` |
-
-#### 요청 예시
-
-```
-GET /v1/stations?district_name=역삼동&cluster_code=cluster00
-```
+#### 요청 파라미터
 
 | 파라미터 | 타입 | 필수 | 설명 |
 |----------|------|------|------|
-| district_name | string | | 행정동 필터 |
-| cluster_code | string | | 지역 특성 필터 (cluster00~04) |
+| `district_name` | string | | 행정동 필터 |
+| `cluster_code` | string | | 군집 필터 |
 
-#### 응답 예시 (200 OK)
+#### 응답 예시
 
 ```json
 {
@@ -265,207 +239,45 @@ GET /v1/stations?district_name=역삼동&cluster_code=cluster00
 }
 ```
 
-#### 필드 설명
+## 5. 날씨 API
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| items | array | 대여소 목록 |
-| items[].station_id | integer | 대여소 고유 ID (내부) |
-| items[].api_station_id | string | 외부 API 대여소 ID |
-| items[].station_name | string | 대여소명 |
-| items[].district_name | string | 행정동명 |
-| items[].address | string | 주소 |
-| items[].latitude | number | 위도 |
-| items[].longitude | number | 경도 |
-| items[].cluster_code | string | 지역 특성 코드 |
-| items[].operational_status | string | `operational` \| `비활성` |
-| total_count | integer | 전체 대여소 수 |
+### `GET /v1/weather/direct`
 
-#### 상태코드
+용도:
+- 오늘 포함 7일 일별 예보 조회
+- 사용자/관리자 탭의 주간 날씨 UI 구성
 
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
+### `GET /v1/weather/direct/single`
 
----
+용도:
+- 선택 날짜 또는 기준 시각의 상세 날씨 조회
+- 화면의 선택 시간 상세 날씨 구성
 
-### 3.4 날씨 예보 (7일)
+날짜 선택 원칙:
 
-**기능**: Open-Meteo API 직접 조회. start_date 없으면 오늘 포함 7일치
+- 과거 날짜 선택 불가
+- 현재 시점부터 7일 이내까지만 허용
 
-| 항목 | 내용 |
-|------|------|
-| **요청 방식** | GET |
-| **경로** | `/v1/weather/direct` |
+## 6. 에러 응답 원칙
 
-#### 요청 예시
-
-```
-GET /v1/weather/direct?lat=37.5665&lon=126.978&start_date=2026-03-18
-```
-
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| lat | number | ✓ | 위도 |
-| lon | number | ✓ | 경도 |
-| start_date | string | | 시작 날짜. YYYY-MM-DD. 없으면 오늘 포함 7일 |
-
-#### 응답 예시 (200 OK)
+예시:
 
 ```json
 {
-  "results": [
-    {
-      "weather_datetime": "2026-03-18T00:00:00+09:00",
-      "weather_type": "맑음",
-      "weather_low": 5.2,
-      "weather_high": 14.1,
-      "icon_url": "https://open-meteo.com/images/weather/..."
-    }
-  ]
-}
-```
-
-#### 필드 설명
-
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| results | array | 일별 날씨 목록 |
-| results[].weather_datetime | string | 날짜·시간. ISO 8601 형식 |
-| results[].weather_type | string | 한글 날씨 유형 (맑음, 흐림, 비 등) |
-| results[].weather_low | number | 최저 기온 (°C) |
-| results[].weather_high | number | 최고 기온 (°C) |
-| results[].icon_url | string | Open-Meteo 아이콘 URL |
-
-#### 상태코드
-
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
-| 400 | 파라미터 오류 (날짜 형식 등) |
-
----
-
-### 3.5 특정일 날씨
-
-**기능**: 특정 날짜의 날씨만 조회. target_date 없으면 오늘
-
-| 항목 | 내용 |
-|------|------|
-| **요청 방식** | GET |
-| **경로** | `/v1/weather/direct/single` |
-
-#### 요청 예시
-
-```
-GET /v1/weather/direct/single?lat=37.5665&lon=126.978&target_date=2026-03-18
-```
-
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| lat | number | ✓ | 위도 |
-| lon | number | ✓ | 경도 |
-| target_date | string | | 조회할 날짜. YYYY-MM-DD. 없으면 오늘 |
-
-#### 응답 예시 (200 OK)
-
-```json
-{
-  "result": {
-    "weather_datetime": "2026-03-18T00:00:00+09:00",
-    "weather_type": "맑음",
-    "weather_low": 5.2,
-    "weather_high": 14.1,
-    "icon_url": "https://open-meteo.com/images/weather/..."
+  "error": {
+    "code": "INVALID_PARAMETER",
+    "message": "lat, lng are required"
   }
 }
 ```
 
-#### 필드 설명
+주요 원칙:
+- 필수 파라미터 누락 시 명확한 오류 반환
+- 일부 외부 데이터 실패 시 전체 실패보다 부분 응답 우선
+- 폴백이 발생하면 응답 상태 필드로 구분 가능
 
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| result | object | 해당일 날씨 |
-| result.weather_datetime | string | 날짜·시간. ISO 8601 형식 |
-| result.weather_type | string | 한글 날씨 유형 |
-| result.weather_low | number | 최저 기온 (°C) |
-| result.weather_high | number | 최고 기온 (°C) |
-| result.icon_url | string | Open-Meteo 아이콘 URL |
+## 7. 현재 메모
 
-#### 상태코드
-
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
-| 400 | 파라미터 오류 (날짜 형식 등) |
-
----
-
-## 4. 상태코드 및 에러 응답
-
-### 4.1 HTTP 상태코드 요약
-
-| 코드 | 설명 |
-|------|------|
-| 200 | 성공 |
-| 400 | Bad Request — 파라미터 누락/형식 오류 |
-| 404 | Not Found — 해당 조건에 맞는 데이터 없음 |
-| 500 | Internal Server Error — 서버 내부 오류 |
-
-### 4.2 에러 응답 형식 (400, 500 등)
-
-```json
-{
-  "result": "Error",
-  "errorMsg": "날짜 형식이 올바르지 않습니다. (YYYY-MM-DD 형식 필요): 2026/03/18"
-}
-```
-
-| 필드 | 타입 | 설명 |
-|------|------|------|
-| result | string | 항상 `"Error"` |
-| errorMsg | string | 에러 메시지 |
-| traceback | string | (개발 환경에서만) 스택 트레이스 |
-
-### 4.3 에러 코드 (비즈니스)
-
-| code | 설명 |
-|------|------|
-| INVALID_PARAMETER | 필수 파라미터 누락 또는 형식 오류 |
-| SERVICE_UNAVAILABLE | 실시간 API 또는 예측 서비스 장애 |
-| NOT_FOUND | 해당 조건에 맞는 데이터 없음 |
-
----
-
-## 5. 예외 스테이션 규칙
-
-| 상황 | API 응답 처리 |
-|------|---------------|
-| 실시간 비노출 (2314, 2323, 3628 등) | `items`에 포함하지 않고 `exceptions` 배열에만 포함 |
-| 비활성 스테이션 | `operational_status: "비활성"`으로 `items`에 포함 또는 `exceptions` 처리 |
-| 실시간 API 장애 | `exceptions`에 포함, `reason`에 "실시간 정보 없음" 등 |
-
----
-
-## 6. 버전/수정일 기록
-
-| 버전 | 수정일 | 변경 내용 |
-|------|--------|-----------|
-| 1.0.0 | 2026-03-18 | 최초 작성. 기능별 API 목록, 요청/응답 예시, 필드 설명, 상태코드, 에러 응답 포함 |
-
----
-
-## 7. 관련 문서
-
-| 문서 | 용도 |
-|------|------|
-| `openapi.yaml` | OpenAPI 3.0 전체 명세 (Swagger Editor, ReDoc) |
-| `fastapi/API_GUIDE.md` | FastAPI 서버 설치·실행 가이드 |
-
----
-
-## 8. 사용법
-
-- **Swagger UI**: 서버 실행 후 http://localhost:8000/docs
-- **ReDoc**: http://localhost:8000/redoc
-- **YAML 편집**: [Swagger Editor](https://editor.swagger.io/)에 `openapi.yaml` 붙여넣기
+- 현재 FastAPI는 목업 응답 기준으로 동작한다.
+- 실시간 재고 연동, 예측 런타임 연결, 로컬 마스터 로딩은 후속 작업이다.
+- DB는 필수 조건이 아니며, 필요 시 `prediction_logs`만 최소 저장한다.

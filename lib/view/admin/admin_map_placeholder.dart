@@ -1,8 +1,9 @@
+// DDRI 관리자 맵 플레이스홀더: 강남구 재배치 시각화, 추후 지도 연동
 import 'package:flutter/material.dart';
 
 import '../../core/design_token.dart';
 
-/// 관리자 맵 플레이스홀더
+/// 관리자 맵 플레이스홀더. "강남구 재배치 시각화 맵" 표시.
 class AdminMapPlaceholder extends StatelessWidget {
   const AdminMapPlaceholder({super.key});
 
@@ -49,6 +50,7 @@ class AdminMapPlaceholder extends StatelessWidget {
   }
 }
 
+/// 맵 패턴 그리기 (곡선 경로 + 원형 포인트)
 class _MapPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

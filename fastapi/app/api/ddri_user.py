@@ -3,8 +3,10 @@ DDRI 사용자 페이지 API - 근처 대여소 조회
 14_ddri_api_schema.md 기준
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
+
+from ..utils.security import validate_iso_datetime
 
 router = APIRouter()
 
@@ -24,10 +26,47 @@ async def get_stations_nearby(
     - lat, lng 기준 거리순 정렬
     - 목업 응답 (실제 DB 연동 시 stations + realtime_station_stock + station_demand_forecasts)
     """
+    # 인젝션 방지: target_datetime 검증
+    target_dt = validate_iso_datetime(target_datetime)
+    if not target_dt:
+        raise HTTPException(status_code=400, detail="target_datetime 형식이 올바르지 않습니다. (ISO 8601)")
+
     # TODO: DB 연동 - stations, realtime_station_stock, station_demand_forecasts
     return {
-        "target_datetime": target_datetime,
+        "target_datetime": target_dt,
         "user_location": {"lat": lat, "lng": lng},
+        "weather": {
+            "weekly_forecast": [
+                {
+                    "weather_datetime": "2026-03-20T00:00:00+09:00",
+                    "weather_type": "맑음",
+                    "weather_low": 4.0,
+                    "weather_high": 13.0,
+                    "icon_url": "https://openweathermap.org/img/wn/01d@2x.png",
+                },
+                {
+                    "weather_datetime": "2026-03-21T00:00:00+09:00",
+                    "weather_type": "구름많음",
+                    "weather_low": 6.0,
+                    "weather_high": 14.0,
+                    "icon_url": "https://openweathermap.org/img/wn/03d@2x.png",
+                },
+                {
+                    "weather_datetime": "2026-03-22T00:00:00+09:00",
+                    "weather_type": "비",
+                    "weather_low": 7.0,
+                    "weather_high": 11.0,
+                    "icon_url": "https://openweathermap.org/img/wn/10d@2x.png",
+                },
+            ],
+            "selected_forecast": {
+                "weather_datetime": target_dt,
+                "weather_type": "구름많음",
+                "weather_low": 6.0,
+                "weather_high": 14.0,
+                "icon_url": "https://openweathermap.org/img/wn/03d@2x.png",
+            },
+        },
         "items": [
             {
                 "station_id": 2328,

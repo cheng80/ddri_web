@@ -19,10 +19,11 @@ app = FastAPI(
 )
 
 # CORS 설정 (Flutter 웹과 통신을 위해 필요)
+# allow_credentials=True일 때 allow_origins=["*"] 사용 불가 → credentials=False
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # 개발 환경용, 프로덕션에서는 특정 도메인으로 제한
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )

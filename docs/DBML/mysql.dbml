@@ -1,117 +1,27 @@
-// DDRI MySQL Schema - DBML
-// 강남구 따릉이 대여소 조회·재배치 지원 웹서비스
-// dbdiagram.io 또는 dbml-cli로 시각화 가능
+// DDRI Minimal MySQL Schema - DBML
+// 현재 기준: 선택적 prediction_logs 저장만 지원
 
 Project ddri_db {
   database_type: 'MySQL'
-  Note: '강남구 따릉이 대여소 조회·재배치 지원 웹서비스'
+  Note: 'DDRI 모니터링 웹 최소 영속 스키마'
 }
 
-Table stations {
-  id bigint [pk, increment, note: 'PK']
-  station_id int [unique, not null, note: '숫자형 대여소 ID']
-  api_station_id varchar(32) [note: 'ST-xxxx 등 외부 API ID']
-  station_name varchar(255) [not null]
-  district_name varchar(64) [note: '행정동']
-  address varchar(512)
-  latitude decimal(10,7)
-  longitude decimal(10,7)
-  cluster_code varchar(32) [note: 'cluster00~04']
-  operational_status varchar(32) [default: 'operational', note: 'operational|비노출|비활성']
-  is_service_target tinyint [default: 1]
-  created_at datetime [default: `now()`]
-  updated_at datetime [default: `now()`]
-
-  indexes {
-    district_name
-    cluster_code
-    (latitude, longitude)
-  }
-}
-
-Table station_api_mappings {
+Table prediction_logs {
   id bigint [pk, increment]
-  station_id int [not null, ref: > stations.station_id]
-  resolved_api_station_id varchar(32)
-  source_api varchar(64)
-  match_status varchar(32) [note: 'matched|unmatched|exception']
-  exception_reason varchar(255) [note: '실시간 비노출 등']
-  verified_at datetime
-  created_at datetime [default: `now()`]
-
-  indexes {
-    station_id
-  }
-}
-
-Table realtime_station_stock {
-  id bigint [pk, increment]
-  station_id int [not null, ref: > stations.station_id]
-  stock_datetime datetime [not null]
-  current_bike_stock int [default: 0]
-  parking_bike_total_count int
-  shared_count decimal(10,2)
-  operational_status varchar(32)
-  raw_payload_hash char(64)
-  created_at datetime [default: `now()`]
-
-  indexes {
-    (station_id, stock_datetime)
-    stock_datetime
-  }
-}
-
-Table station_demand_forecasts {
-  id bigint [pk, increment]
-  station_id int [not null, ref: > stations.station_id]
-  target_datetime datetime [not null]
-  predicted_rental_count decimal(10,2)
-  predicted_return_count decimal(10,2)
-  predicted_remaining_bikes decimal(10,2)
-  availability_level varchar(32) [note: 'sufficient|normal|low']
+  prediction_time datetime [not null, note: '예측 실행 시각']
+  target_time datetime [not null, note: '예측 대상 시각']
+  station_id int [not null, note: '숫자형 대여소 ID']
+  horizon_hours int [not null, note: '예측 시간 간격']
+  predicted_stock decimal(10,2) [note: '예상 재고']
+  predicted_net_change decimal(10,2) [note: '예상 누적 순변화']
   model_version varchar(64)
-  cluster_code varchar(32)
+  source_updated_at datetime [note: '실시간 재고 또는 외부 원천 기준 시각']
   created_at datetime [default: `now()`]
 
   indexes {
-    (station_id, target_datetime)
-    target_datetime
-  }
-}
-
-Table station_risk_snapshots {
-  id bigint [pk, increment]
-  station_id int [not null, ref: > stations.station_id]
-  base_datetime datetime [not null]
-  current_bike_stock int
-  predicted_demand decimal(10,2)
-  stock_gap decimal(10,2) [note: 'current - predicted']
-  risk_score decimal(5,4) [note: '0~1']
-  reallocation_priority int [note: '1=최우선']
-  operational_status varchar(32)
-  created_at datetime [default: `now()`]
-
-  indexes {
-    (station_id, base_datetime)
-    base_datetime
-    risk_score
-    reallocation_priority
-  }
-}
-
-Table statistics_snapshots {
-  id bigint [pk, increment]
-  base_date date [not null]
-  base_hour int
-  cluster_code varchar(32)
-  metric_key varchar(64) [not null]
-  metric_value decimal(15,4)
-  dimension_key varchar(64)
-  dimension_value varchar(255)
-  created_at datetime [default: `now()`]
-
-  indexes {
-    (base_date, base_hour)
-    metric_key
+    (station_id, target_time)
+    prediction_time
+    target_time
+    model_version
   }
 }

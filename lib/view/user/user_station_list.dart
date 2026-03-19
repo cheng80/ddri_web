@@ -1,12 +1,16 @@
+// DDRI 대여소 목록: 거리순, 로딩/빈 상태, 지도 포커스 연동
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import 'user_page_controller.dart';
+import '../../vm/user_page_controller.dart';
 import 'user_station_card.dart';
 
-/// 대여소 목록 (거리순)
+/// 대여소 목록 (거리순). ListView + UserStationCard.
+/// [sideLayout] true: 독립 스크롤 (좌우분할 시 우측 패널용)
 class UserStationList extends StatelessWidget {
-  const UserStationList({super.key});
+  const UserStationList({super.key, this.sideLayout = false});
+
+  final bool sideLayout;
 
   @override
   Widget build(BuildContext context) {
@@ -80,6 +84,35 @@ class UserStationList extends StatelessWidget {
         );
       }
 
+      if (sideLayout) {
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Text(
+                '주변 대여소 ${ctrl.items.length}개',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      color: Colors.grey.shade700,
+                    ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            if (ctrl.isLoading.value)
+              const Padding(
+                padding: EdgeInsets.all(8),
+                child: Center(child: LinearProgressIndicator()),
+              ),
+            Expanded(
+              child: ListView.builder(
+                itemCount: ctrl.items.length,
+                itemBuilder: (_, i) => UserStationCard(station: ctrl.items[i]),
+              ),
+            ),
+          ],
+        );
+      }
+
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -98,11 +131,11 @@ class UserStationList extends StatelessWidget {
               padding: EdgeInsets.all(8),
               child: Center(child: LinearProgressIndicator()),
             ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: ctrl.items.length,
-              itemBuilder: (_, i) => UserStationCard(station: ctrl.items[i]),
-            ),
+          ListView.builder(
+            itemCount: ctrl.items.length,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemBuilder: (_, i) => UserStationCard(station: ctrl.items[i]),
           ),
         ],
       );

@@ -1,6 +1,4 @@
-/// API 응답 모델 (OpenAPI 스키마 기준)
-/// 화면별로 필요한 필드만 사용, 공통 인터페이스 유지
-
+// DDRI API 응답 모델: StationNearbyItem, StationRiskItem, StationMasterItem, WeatherDayItem
 /// 근처 대여소 1건 (사용자 페이지)
 class StationNearbyItem {
   const StationNearbyItem({
@@ -28,7 +26,8 @@ class StationNearbyItem {
   final double predictedRentalCount;
   final double predictedRemainingBikes;
   final bool bikeAvailabilityFlag;
-  final String availabilityLevel; // sufficient | normal | low
+  /// sufficient | normal | low
+  final String availabilityLevel;
   final String operationalStatus;
 
   factory StationNearbyItem.fromJson(Map<String, dynamic> json) {
@@ -126,6 +125,42 @@ class StationMasterItem {
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       clusterCode: json['cluster_code'] as String? ?? '',
       operationalStatus: json['operational_status'] as String? ?? '',
+    );
+  }
+}
+
+/// 날씨 1건 (일별 또는 시각별)
+class WeatherDayItem {
+  const WeatherDayItem({
+    required this.weatherDatetime,
+    required this.weatherType,
+    required this.weatherLow,
+    required this.weatherHigh,
+    required this.precipitationProbability,
+    required this.iconUrl,
+    this.temperature,
+  });
+
+  final String weatherDatetime;
+  final String weatherType;
+  final double weatherLow;
+  final double weatherHigh;
+  final double precipitationProbability;
+  final String iconUrl;
+  final double? temperature;
+
+  factory WeatherDayItem.fromJson(Map<String, dynamic> json) {
+    return WeatherDayItem(
+      weatherDatetime: json['weather_datetime'] as String? ?? '',
+      weatherType: json['weather_type'] as String? ?? '',
+      weatherLow: (json['weather_low'] as num?)?.toDouble() ?? 0,
+      weatherHigh: (json['weather_high'] as num?)?.toDouble() ?? 0,
+      precipitationProbability: ((json['precipitation_probability'] ??
+                  json['precipitation_probability_max']) as num?)
+              ?.toDouble() ??
+          0,
+      iconUrl: json['icon_url'] as String? ?? '',
+      temperature: (json['temperature'] as num?)?.toDouble(),
     );
   }
 }

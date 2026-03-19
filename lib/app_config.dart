@@ -1,3 +1,4 @@
+// DDRI 앱 설정: API URL, 카카오 키, 저장소 키, 라우트 경로
 import 'app_config_platform_stub.dart'
     if (dart.library.io) 'app_config_platform_io.dart'
     as _platform;
@@ -19,7 +20,8 @@ class AppConfig {
   // static const String? customApiBaseUrl = 'http://cheng80.myqnapcloud.com:18000';
 }
 
-/// FastAPI 서버 베이스 URL
+/// FastAPI 서버 베이스 URL 반환.
+/// [AppConfig.customApiBaseUrl]이 있으면 사용, 없으면 플랫폼 기본값(웹: 127.0.0.1:8000).
 String getApiBaseUrl() {
   if (AppConfig.customApiBaseUrl != null &&
       AppConfig.customApiBaseUrl!.trim().isNotEmpty) {
@@ -29,6 +31,7 @@ String getApiBaseUrl() {
 }
 
 /// 로컬 저장소(GetStorage) 키 상수.
+/// 사용자 저장 주소·좌표 등에 사용.
 class StorageKeys {
   StorageKeys._();
 
@@ -38,7 +41,8 @@ class StorageKeys {
   static const String savedLng = 'saved_lng';
 }
 
-/// GoRouter에서 사용할 경로 상수.
+/// DDRI 앱 라우트 경로 상수.
+/// GetX 라우팅에서 사용.
 class RoutePaths {
   RoutePaths._();
 

@@ -1,10 +1,7 @@
-/// 웹 환경용 외부 지도 길찾기
-/// url_launcher로 Google/Naver/Kakao 지도 웹 URL을 새 탭에서 엽니다.
-/// (map_launcher는 iOS/Android 전용이라 웹 미지원)
-
+// DDRI 외부 지도 길찾기: Google/Naver/Kakao 웹 URL, url_launcher
 import 'package:url_launcher/url_launcher.dart';
 
-/// 지원 지도 종류
+/// 지원 지도 종류 (Google, Naver, Kakao)
 enum MapProvider {
   google,
   naver,
@@ -26,6 +23,7 @@ Future<bool> launchMapDirections({
   return launchUrl(uri, mode: LaunchMode.externalApplication);
 }
 
+/// 지도별 길찾기 URL 생성
 Uri _buildDirectionsUri({
   required MapProvider provider,
   required double lat,

@@ -1,185 +1,180 @@
-# DDRI 웹서비스 실행 계획
+# DDRI 웹서비스 실행 플랜
 
-작성일: 2026-03-17  
-목적: 강남구 따릉이 대여소 조회·재배치 지원 웹서비스를 단계별로 완료해 나가기 위한 체크리스트.
+작성일: 2026-03-20  
+갱신일: 2026-03-17  
+목적: `ddri_web` 구현 작업을 웹서비스 기준으로만 관리한다.
 
----
+## 기준 문서
 
-## 서비스 기본 원칙
+- [12_ddri_responsive_breakpoints_and_layouts.md](docs/02_web_service_final/legacy/12_ddri_responsive_breakpoints_and_layouts.md) (반응형 레이아웃)
+- [README.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/README.md)
+- [01_screen_design_and_scope.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/01_screen_design_and_scope.md)
+- [02_system_design.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/02_system_design.md)
+- [03_api_and_runtime_contract.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/03_api_and_runtime_contract.md)
 
-- **따릉이 전용 대여 앱 아님**: 따릉이 사용자가 **비로그인 상태로 조회만** 하는 정보 앱
-- **로그인 없음**: 주소만 알면 누구나 접속 가능
-- **서비스 대상**: 서울시 따릉이 자전거 대여 서비스 이용자 (정보 조회 목적)
-- **지역 범위**: 현재 강남구 한정
+## 서비스 범위
 
-### 절대 포함 금지 (강력 제약)
+- 비로그인 공개 웹
+- 사용자 페이지 `/user`
+- 관리자 페이지 `/admin`
+- 조회 전용 서비스
+- 외부 API + 로컬 마스터 + 서버 추론 구조
+- DB는 필요 시 `prediction_logs`만 저장
 
-| 항목 | 금지 내용 |
-|------|-----------|
-| **이용권** | 구매, 조회, 결제, 구독, 이용권 관리 |
-| **사용자 my** | 로그인, 회원가입, 프로필, 즐겨찾기, 마이페이지 |
+## 최근 작업 (2026-03-17~20)
 
-- **반응형**: 모바일·태블릿·데스크탑 웹 모두 지원 (패키지: `flutter_screenutil`)
-- **반응형 일관성**: 구간별 레이아웃만 다르고, 색상·타이포·컴포넌트는 공통 Design Token 유지
-- **참조 문서**: 마스터 플랜(Phase 1~6)은 `ddri_work` ML 프로젝트 기준 참조용. ML 산출물은 별도 투트랙으로 확정 후 이 웹앱에 연결 예정.
+### 관리자 페이지 UI 단순화
+- [x] 카드형 → 데이터프레임(DataTable) 형식으로 변경
+- [x] 위험도 프로그레스 바·배지 제거, 텍스트만 표시
+- [x] 컬럼 타이틀 추가 (대여소, 동, 재고, 예측, 차이, 위험, 우선)
+- [x] AdminStationRow 제거, DataTable로 통합
 
-### 스테이션 데이터 구분
+### 에러 처리·보안
+- [x] 에러 메시지 사용자용으로 변경 (raw exception 화면 노출 제거)
+- [x] 예외·오류 발생 시에도 화면에는 내부 예외 클래스명, stack trace, SQL/쿼리, 파일 경로, 서버/라이브러리 상세 정보 등 공격 단서가 될 수 있는 문자열을 노출하지 않음
+- [x] 화면 노출 메시지는 사용자 안내용 일반 문구만 사용하고, 상세 원인은 서버 로그/개발자 콘솔에서만 확인
+- [x] FastAPI CORS: `allow_credentials=False` (웹 fetch 호환)
+- [x] 인젝션 방지: `fastapi/app/utils/security.py` 입력 검증 적용
+  - sort_by, sort_order, district_name, cluster_code, target_datetime 등 화이트리스트·형식 검증
+  - 날씨 API 에러 응답에서 traceback 제거
 
-| 구분 | stations (161개) | 실전 웹 |
-|------|------------------|----------|
-| **용도** | ML 학습·예측용 (2023~2025 공통 스테이션) | 현재 강남구 전체 대여소 조회 |
-| **출처** | DB 고정 (학습/예측 파이프라인용) | 외부 API 실시간/주기 수집 |
-| **특징** | 예측 모델과 1:1 매칭 | 운영 중인 실제 대여소 목록 |
+### 보안 노출 정리 작업 (추가 진행)
+- [ ] 관리자 예외 스테이션 UI에서 `station_id` 직접 노출 제거
+- [ ] 예외 스테이션 영역을 집계형·설명형 문구로 변경 (내부 식별자 비노출)
+- [ ] Flutter `ApiException`에서 raw `response.body` 직접 노출되지 않도록 구조 정리
+- [ ] 컨트롤러/UI에서 `e.toString()` 또는 서버 응답 원문을 화면에 바인딩하지 않도록 점검
+- [ ] FastAPI 4xx 입력 오류 응답 문구를 파라미터명 중심 문구에서 일반 사용자용 안전 문구로 정리
+- [ ] 사용자 `/user`, 관리자 `/admin`의 오류·빈 상태·폴백 상태 전체를 화면 비노출 원칙 기준으로 재점검
 
-실전 웹에서는 **외부 API(서울시 따릉이 등)를 통해 현재 강남구 전체 스테이션**을 받아와야 한다. 161개는 ML용으로 유지.
+### 지도 성능
+- [x] 고줌 시 앱 멈춤 방지: maxZoom 18→16
+- [x] TileLayer: maxNativeZoom 16, keepBuffer 1, panBuffer 0
+- [x] tileUpdateTransformer debounce 80ms
+- [x] RepaintBoundary로 지도 리페인트 분리
 
----
+### 사용자 페이지 반응형·UX (2026-03-17)
 
-## 페이지 범위 (현재 기획)
-
-| 페이지 | 경로 | 대상 | 목적 |
-|--------|------|------|------|
-| **사용자 페이지** | `/user` | 따릉이 이용자 | 내 근처·지정 주소 근처에서 지정 시간대 자전거 예측 조회, 길찾기(가능하면) |
-| **관리자 페이지** | `/admin` | 재배치 관리자 | 자전거가 부족한 위치 파악, 재배치 판단 지원 |
-
-- **통계 페이지**: 미정 (현재 기획 범위 밖)
-
----
-
-## 실행 체크리스트
-
-### Phase 0. 기획·설계 고정
-
-> **원칙**: 화면 설계가 먼저다. 구성이 나와야 그에 맞는 API·서비스를 설계할 수 있다.
-
-- [x] 0.1 사용자 페이지 화면 설계 확정
-  - [x] 검색/입력 영역 (내 위치 찾기, 주소 찾기, 시간대 선택 — 3가지 필수)
-  - [x] 대여소 목록·카드 표시 항목 (길찾기 버튼 포함)
-  - [x] 레이아웃·와이어프레임 (Stitch user/ 데스크탑·태블릿·모바일)
-- [x] 0.2 관리자 페이지 화면 설계 확정
-  - [x] 기능 플랜 작성 (13_ddri_admin_page_plan.md)
-  - [x] 필터·정렬 기준 (긴급만, 행정동, 정렬)
-  - [x] 표/카드 표시 항목 (재고·예측·차이·위험·우선순위)
-  - [x] 레이아웃·와이어프레임 (Stitch admin/ 데스크탑·태블릿·모바일)
-- [x] 0.3 API 응답 스키마 문서화 (화면 구성에 맞춰)
-  - [x] 일반 사용자 조회 응답 예시 확정 (14_ddri_api_schema.md)
-  - [x] 관리자 목록 응답 예시 확정
-  - [x] 예외 스테이션 규칙 API 응답 포함 방식 정의
-
-### Phase 1. Flutter 프로젝트 골격
-
-- [x] 1.1 main.dart 수정
-  - [x] 패키지/import 경로 ddri_web 기준으로 정리
-  - [x] 문법 오류 수정 (GetMaterialApp, ThemeData)
-- [x] 1.2 라우팅 설정
-  - [x] `/user` 진입점
-  - [x] `/admin` 진입점
-  - [x] 기본 경로(`/`) → `/user` 리다이렉트
-- [x] 1.3 공통 레이아웃
-  - [x] 상단 네비게이션 (사용자 / 관리자)
-  - [x] 공통 테마·스타일 (DesignToken, AppTheme)
-
-### Phase 2. 사용자 페이지
-
-- [x] 2.1 검색/입력 UI
-  - [x] 내 위치 찾기 (geolocator)
-  - [x] 주소 찾기 (kpostal_plus)
-  - [x] 시간대 선택 (예측 기준 시각)
-  - [x] 길찾기 버튼 (url_launcher)
-- [x] 2.2 대여소 목록 UI
-  - [x] 거리순 정렬
-  - [x] 현재 자전거 수, 예상 잔여 수, 대여 가능 여부 배지
-- [x] 2.3 API 연동 (목업 → 실제)
-  - [x] 목업 API 클라이언트 연결
-  - [ ] 실제 백엔드 연동 (준비 시)
-
-### Phase 3. 관리자 페이지
-
-- [x] 3.1 제어 영역
-  - [x] 기준 날짜/시간 선택
-  - [x] 긴급 필터, 행정동 필터 (군집은 보조)
-  - [x] 정렬 기준 선택
-- [x] 3.2 대여소 목록 표
-  - [x] 현재 재고, 예측 수요, 재고 차이값
-  - [x] 위험 점수, 재배치 우선순위
-  - [x] 예외 스테이션 구분 표시
-- [x] 3.3 API 연동 (목업 → 실제)
-  - [x] 목업 API 클라이언트 연결
-  - [ ] 실제 백엔드 연동 (준비 시)
-
-### Phase 4. 백엔드
-
-- [x] 4.1 DDRI 서비스용 API 엔드포인트
-  - [x] 사용자 조회 API (`GET /v1/user/stations/nearby`)
-  - [x] 관리자 목록 API (`GET /v1/admin/stations/risk`)
-  - [x] 스테이션 마스터 (`GET /v1/stations`), 날씨 (`GET /v1/weather/*`) — 목업
-- [ ] 4.2 실시간 재고 연동
-  - [ ] OA-15493 bikeList 수집
-  - [ ] 강남구 전체 스테이션 (외부 API 수집, 161개는 ML용)
-- [ ] 4.3 예측 결과 연동
-  - [ ] ddri_work ML 산출물 연결 (준비 시)
-- [ ] 4.4 DB 데이터 멱등성
-  - [ ] `realtime_station_stock`: (station_id, stock_datetime) 유니크·UPSERT
-  - [ ] `station_demand_forecasts`: (station_id, target_datetime) 유니크·UPSERT
-  - [ ] `stations`: 외부 API 수집 시 INSERT/UPDATE 정책 (api_station_id 기준)
-
-### Phase 5. 마무리·검증
-
-- [ ] 5.1 Chrome 웹 실행 검증
-- [ ] 5.2 예외 스테이션 처리 검증
-- [ ] 5.3 사용자·관리자 시나리오 E2E 확인
+- [x] 반응형 레이아웃 구현 (12_ddri_responsive_breakpoints_and_layouts.md 기준)
+  - 데스크탑 1024px~: 좌측 45% 지도, 우측 55% 리스트 (좌우 분할)
+  - 태블릿 900px~: 좌측 40% 지도, 우측 60% 리스트 (가로폭 충분 시 세로여도 좌우분할)
+  - 태블릿 600~899px 가로: 좌우 분할
+  - 모바일/태블릿세로: 상하 분할 + 전체 스크롤
+- [x] 지도 없을 때 플레이스홀더 (빈 공간 유지, "현 위치로 찾기" 버튼)
+- [x] 페이지 진입 시 현 위치 자동 로드 (UserPageController onInit)
+- [x] 모바일 오버플로우 해결 (SingleChildScrollView로 전체 스크롤)
+- [x] 지도 최소 높이 유지 (DesignToken.userMapMinHeight 280px)
+- [x] 모바일 날씨 카드 컴팩트화 (140px, 4열)
+- [x] 섹션 순서 통일: 검색 → 날씨 → 지도 → 리스트 (모든 구간 동일)
 
 ---
 
-## 참조 문서
+## 기획 변경 사항
 
-| 용도 | 경로 |
-|------|------|
-| 마스터 플랜 (ML Phase 참조) | `ddri_work/works/00_overview/01_ddri_master_plan.md` |
-| 웹서비스 기획 | `docs/02_web_service_final/` |
-| Stitch MCP 진행 상황 | `docs/02_web_service_final/11_stitch_mcp_progress_and_references.md` |
-| 관리자 페이지 기능 플랜 | `docs/02_web_service_final/13_ddri_admin_page_plan.md` |
-| API 스키마 (화면 기능 기준) | `docs/02_web_service_final/14_ddri_api_schema.md` |
-| API 명세서 (OpenAPI 3.0) | `docs/api/openapi.yaml` |
-| 반응형 브레이크포인트 | `docs/02_web_service_final/12_ddri_responsive_breakpoints_and_layouts.md` |
-| API 운영 규칙 | `cheng80/02_ddri_api_operational_rules.md` |
-| API 테스트 결과 | `cheng80/api_output/` |
-| 개발 규칙 | `CURSOR.md` |
+| 항목 | 기존 | 변경 | 비고 |
+|------|------|------|------|
+| 태블릿 좌우분할 조건 | 600~1023px + 가로(landscape)만 | 900px 이상이면 세로여도 좌우분할 | 지도 확대, 12_ddri_responsive_breakpoints_and_layouts.md 보완 |
+| 모바일 레이아웃 | Column + Expanded (오버플로우) | SingleChildScrollView + 전체 스크롤 | 오버플로우 방지 |
+| 지도 없을 때 | SizedBox.shrink() | 플레이스홀더 + 현 위치 자동 로드 | 빈 공간 방지, 진입 시 자동 조회 |
+| 지도 높이 | 38% viewport, 200~400px | 42% viewport, 280~450px | DesignToken.userMapMinHeight/MaxHeight |
+| 모바일 날씨 | 174px 카드, 3열 | 140px 카드, 4열, compact 모드 | 세로 공간 절약 |
+| 섹션 순서 | 모바일에서 지도→날씨 (불일치) | 검색→날씨→지도→리스트 (통일) | 태블릿/모바일 전환 시 일관성 |
 
 ---
 
-## 현재 진행 상황 (체크 요약)
+## 현재 진행 상태
 
-| Phase | 완료 | 미완료 | 비고 |
-|-------|------|--------|------|
-| 0 | 3/3 | 0 | 기획·설계 고정 완료 |
-| 1 | 3/3 | 0 | Phase 1 완료 |
-| 2 | 3/3 | 0 | Phase 2 완료 |
-| 3 | 3/3 | 0 | Phase 3 완료 |
-| 4 | 1/4 | 3 | API 엔드포인트(목업) 완료, 실시간·예측·멱등성 대기 |
-| 5 | 0/3 | 3 | 마무리·검증 대기 |
+### 1. 문서 체계
 
-**다음 권장 작업**: Phase 4.2 실시간 재고 연동
+- [x] 기준 문서 3개 재정의
+- [x] 기존 상세 문서 `legacy/` 이동
+- [x] Stitch 관련 문서 `stitch/` 폴더 정리
+- [ ] `docs/api/` 문서 최소 체계로 재정리
+- [ ] `fastapi/API_GUIDE.md` 현재 구조 기준으로 정리
 
----
+### 2. Flutter 웹
 
-## 모듈화 구조
+- [x] `/user`, `/admin` 라우트 구성
+- [x] 기본 경로 `/` → `/user` 연결
+- [x] 공통 상단 네비게이션 구성
+- [x] 공통 `AppScaffold` 구성
+- [x] 공통 테마 및 Design Token 적용
+- [x] 사용자 페이지 기본 UI 구현
+  - [x] 위치/주소/시간 입력 영역
+  - [x] 대여소 카드 목록
+  - [x] 길찾기 버튼 연결
+  - [x] GetX 상태 관리 연결
+  - [x] 주간 날씨 UI (UserWeatherSection)
+  - [x] 선택 시각 상세 날씨 UI
+  - [ ] 날짜 선택 범위 현재 시점 ~ 7일 이내 제한
+- [x] 관리자 페이지 기본 UI 구현
+  - [x] 기준 시간/필터 제어 영역
+  - [x] 요약 카드
+  - [x] 대여소 표
+  - [x] 예외 스테이션 섹션
+  - [x] GetX 상태 관리 연결
+  - [ ] 주간 날씨 UI
+  - [ ] 기준 시각 상세 날씨 UI
+- [x] 목업 API 클라이언트 연결
+- [x] 사용자/관리자 컨트롤러에서 실제 목업 API 호출 연결
+- [x] 사용자 페이지 지도 (flutter_map, OSM 타일, 줌/패닝 성능 조정)
+- [ ] 실제 백엔드 응답 기준으로 화면 바인딩
+- [x] 사용자 페이지 반응형 레이아웃 (모바일/태블릿/데스크탑)
+- [ ] 관리자 페이지 반응형 점검
 
-| 경로 | 역할 |
-|------|------|
-| `core/` | DesignToken, AppTheme (공통 상수·테마) |
-| `common/layout/` | AppScaffold, TopNavBar (공통 레이아웃) |
-| `common/api/` | DdriApiClient, 모델 (API 인터페이스) |
-| `common/map/` | map_directions_launcher (웹 길찾기) |
-| `view/` | 페이지 진입점 (UserView, AdminView) |
-| `view/user/` | UserPageController, UserSearchArea, UserStationCard/List |
-| `view/admin/` | AdminPageController, AdminControlArea, AdminStationList, AdminSummaryCards |
+### 3. 화면 정합성
 
----
+- [x] Stitch export 기준 화면 반영 시작
+- [x] 관리자 페이지 주요 구성 정리
+- [x] 사용자 페이지 반응형·UX 정합 (검색→날씨→지도→리스트, 지도 최소 높이)
+- [ ] 사용자 페이지와 Stitch 기준 정합성 최종 점검
+- [ ] 관리자 페이지와 Stitch 기준 정합성 최종 점검
+- [ ] 모바일/태블릿/데스크탑 공통 밀도 점검
+- [ ] 오류·폴백·빈 상태에서도 화면에 내부 구현 정보나 익셉션 단서가 노출되지 않는지 점검
 
-## 진행 방식
+### 4. FastAPI
 
-- **화면 설계 → API 스키마 → 구현** 순서 유지
-- 위 체크리스트 항목을 순서대로 진행
-- 완료 시 `- [ ]` → `- [x]` 로 변경
-- 불분명한 요구사항은 구현 전에 확인 후 진행
+- [x] 사용자 조회 API 목업 엔드포인트
+- [x] 관리자 조회 API 목업 엔드포인트
+- [x] 스테이션/날씨 목업 엔드포인트
+- [x] FastAPI 메인 앱에 DDRI 라우터 등록
+- [x] CORS 설정 (웹 fetch 호환)
+- [x] 입력 검증·인젝션 방지 (security.py)
+- [ ] 외부 실시간 재고 API 연동
+- [ ] 주간 날씨 + 선택 시각 날씨 응답 구조 확정
+- [ ] 예측 모델 런타임 연결
+- [ ] 로컬 마스터 로딩 구조 확정
+- [ ] 예외/폴백 처리 규칙 구현
+- [ ] 입력 오류/예외 응답의 외부 노출 문구 일반화
+
+### 5. 데이터 계층
+
+- [x] 최소 DB 방향 재정의
+- [x] ERD / DBML / init schema 최소화
+- [ ] `prediction_logs` 실제 저장 여부 결정
+- [ ] 로컬 마스터 JSON 스키마 확정
+- [ ] 외부 API 응답 -> 내부 모델 입력 변환 규칙 확정
+
+### 6. 검증
+
+- [ ] Chrome 실환경 실행 검증
+- [ ] 사용자 조회 시나리오 점검
+- [ ] 관리자 조회 시나리오 점검
+- [ ] 외부 API 실패 시 폴백 동작 점검
+- [ ] 예외 스테이션 처리 점검
+- [ ] 보안 노출 정리 작업 결과 점검 (`station_id`, raw body, 내부 예외 문자열 비노출)
+
+## 바로 다음 작업
+
+1. `docs/api/`와 `fastapi/API_GUIDE.md`를 새 기준 문서 체계에 맞게 정리
+2. 보안 노출 정리 작업 수행 (`station_id` 비노출, `ApiException` 정리, 입력 오류 문구 일반화)
+3. 관리자 페이지 주간/기준 시각 날씨 UI (선택)
+4. 외부 실시간 재고 API 연동 설계 확정
+5. 로컬 마스터 JSON 구조 확정
+6. 실제 예측 런타임 연결
+
+## 작업 원칙
+
+- 이 파일은 웹서비스 실행 플랜만 다룬다.
+- ML 연구 플랜, 발표 플랜, 리포트 작업은 포함하지 않는다.
+- 세부 설명은 기준 문서에서 관리하고, 이 파일은 체크리스트 중심으로 유지한다.
+- 예외 상황에서도 UI에는 사용자용 안전 문구만 표시하고, 공격 단서가 될 수 있는 내부 오류 정보는 노출하지 않는다.

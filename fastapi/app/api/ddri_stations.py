@@ -6,6 +6,8 @@ DDRI 스테이션 마스터 API - 161개 대여소 목록
 from fastapi import APIRouter, Query
 from typing import Optional
 
+from ..utils.security import validate_district_name, validate_cluster_code
+
 router = APIRouter()
 
 
@@ -20,7 +22,11 @@ async def get_stations(
     - stations 테이블 기반
     - 목업 응답 (실제 DB 연동 시)
     """
-    # TODO: DB 연동 - stations
+    # 인젝션 방지: 입력 검증
+    district = validate_district_name(district_name)
+    cluster = validate_cluster_code(cluster_code)
+    # TODO: DB 연동 시 district, cluster 사용 (파라미터 바인딩)
+    _ = (district, cluster)
     return {
         "items": [
             {

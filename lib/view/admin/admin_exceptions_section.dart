@@ -1,10 +1,11 @@
+// DDRI 예외 스테이션: 실시간 비노출 ID 목록, 접이식
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/design_token.dart';
-import 'admin_page_controller.dart';
+import '../../vm/admin_page_controller.dart';
 
-/// 예외 스테이션 접이식 영역
+/// 예외 스테이션 접이식 영역. exceptions 비어있으면 숨김.
 class AdminExceptionsSection extends StatelessWidget {
   const AdminExceptionsSection({super.key});
 

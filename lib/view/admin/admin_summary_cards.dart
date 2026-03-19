@@ -1,10 +1,11 @@
+// DDRI 관리자 요약 카드: 전체/위험/예외/평균 위험도, 반응형 그리드
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../../core/design_token.dart';
-import 'admin_page_controller.dart';
+import '../../vm/admin_page_controller.dart';
 
-/// 관리자 요약 카드 4개
+/// 관리자 요약 카드 4개 (전체, 위험, 예외, 평균 위험도).
 class AdminSummaryCards extends StatelessWidget {
   const AdminSummaryCards({super.key});
 

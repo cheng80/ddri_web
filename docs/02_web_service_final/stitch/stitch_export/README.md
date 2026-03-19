@@ -70,5 +70,5 @@
 ## Flutter 웹 적용 시 참고
 
 - `flutter_screenutil`로 반응형 적용
-- 반응형 스펙: [12_ddri_responsive_breakpoints_and_layouts.md](../12_ddri_responsive_breakpoints_and_layouts.md)
-- 지도 UX 상세: [10_ddri_user_page_map_ux_spec.md](../10_ddri_user_page_map_ux_spec.md)
+- 반응형 스펙: [12_ddri_responsive_breakpoints_and_layouts.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/legacy/12_ddri_responsive_breakpoints_and_layouts.md)
+- 지도 UX 상세: [10_ddri_user_page_map_ux_spec.md](/Users/cheng80/Desktop/ddri_web/docs/02_web_service_final/legacy/10_ddri_user_page_map_ux_spec.md)

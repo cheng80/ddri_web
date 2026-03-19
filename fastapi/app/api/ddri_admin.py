@@ -3,8 +3,16 @@ DDRI 관리자 페이지 API - 재배치 판단 목록 조회
 14_ddri_api_schema.md 기준
 """
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
+
+from ..utils.security import (
+    validate_sort_by,
+    validate_sort_order,
+    validate_district_name,
+    validate_cluster_code,
+    validate_iso_datetime,
+)
 
 router = APIRouter()
 
@@ -27,9 +35,51 @@ async def get_stations_risk(
     - 관리자 페이지용
     - 목업 응답 (실제 DB 연동 시 station_risk_snapshots)
     """
-    # TODO: DB 연동 - station_risk_snapshots, stations
+    # 인젝션 방지: 입력 검증
+    base_dt = validate_iso_datetime(base_datetime)
+    if not base_dt:
+        raise HTTPException(status_code=400, detail="base_datetime 형식이 올바르지 않습니다. (ISO 8601)")
+    district = validate_district_name(district_name)
+    cluster = validate_cluster_code(cluster_code)
+    sort_col = validate_sort_by(sort_by or "risk_score")
+    sort_dir = validate_sort_order(sort_order or "desc")
+
+    # TODO: DB 연동 시 base_dt, district, cluster, sort_col, sort_dir 사용 (파라미터 바인딩)
+    _ = (district, cluster, sort_col, sort_dir)  # DB 연동 시 사용
     return {
-        "base_datetime": base_datetime,
+        "base_datetime": base_dt,
+        "weather": {
+            "weekly_forecast": [
+                {
+                    "weather_datetime": "2026-03-20T00:00:00+09:00",
+                    "weather_type": "맑음",
+                    "weather_low": 4.0,
+                    "weather_high": 13.0,
+                    "icon_url": "https://openweathermap.org/img/wn/01d@2x.png",
+                },
+                {
+                    "weather_datetime": "2026-03-21T00:00:00+09:00",
+                    "weather_type": "구름많음",
+                    "weather_low": 6.0,
+                    "weather_high": 14.0,
+                    "icon_url": "https://openweathermap.org/img/wn/03d@2x.png",
+                },
+                {
+                    "weather_datetime": "2026-03-22T00:00:00+09:00",
+                    "weather_type": "비",
+                    "weather_low": 7.0,
+                    "weather_high": 11.0,
+                    "icon_url": "https://openweathermap.org/img/wn/10d@2x.png",
+                },
+            ],
+            "selected_forecast": {
+                "weather_datetime": base_dt,
+                "weather_type": "구름많음",
+                "weather_low": 6.0,
+                "weather_high": 14.0,
+                "icon_url": "https://openweathermap.org/img/wn/03d@2x.png",
+            },
+        },
         "summary": {
             "total_count": 161,
             "risk_count": 23,

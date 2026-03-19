@@ -1,8 +1,9 @@
+// DDRI 주소 지오코딩: Nominatim, Kpostal 폴백, 1 req/sec
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 
-/// 주소 → 위경도 변환 (OpenStreetMap Nominatim, API 키 불필요)
+/// 주소 문자열 → 위경도 변환 (Nominatim)
 /// Kpostal 지오코딩 실패 시 폴백용
 /// Nominatim 정책: 1 req/sec, User-Agent 필수
 Future<({double lat, double lng})?> geocodeAddress(String address) async {
@@ -35,7 +36,8 @@ Future<({double lat, double lng})?> geocodeAddress(String address) async {
   return null;
 }
 
-/// Kpostal 결과에서 여러 주소 형식으로 지오코딩 시도
+/// Kpostal 결과에서 여러 주소 형식으로 지오코딩 시도.
+/// address, roadAddress, jibunAddress, userSelectedAddress 순으로 시도.
 Future<({double lat, double lng})?> geocodeKpostal(dynamic result) async {
   final candidates = <String>{
     result.address,

@@ -1,3 +1,4 @@
+// DDRI 검색 영역: 현 위치, 주소 찾기, 날짜/시간, 반경, 에러 메시지
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:kpostal_plus/kpostal_plus.dart';
@@ -5,9 +6,9 @@ import 'package:kpostal_plus/kpostal_plus.dart';
 import '../../app_config.dart';
 import '../../common/geocoding/address_geocoder.dart' show geocodeKpostal;
 import '../../core/design_token.dart';
-import 'user_page_controller.dart';
+import '../../vm/user_page_controller.dart';
 
-/// 검색/입력 영역: 내 위치 찾기, 주소 찾기, 시간대 선택, 반경 선택
+/// 검색/입력 영역: 내 위치 찾기, 주소 찾기, 시간대 선택, 반경 선택.
 class UserSearchArea extends StatelessWidget {
   const UserSearchArea({super.key});
 
@@ -16,32 +17,43 @@ class UserSearchArea extends StatelessWidget {
     final ctrl = Get.find<UserPageController>();
 
     return Container(
+      margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.all(16),
-      color: DesignToken.cardBackground,
-      child: Column(
+      decoration: BoxDecoration(
+        color: DesignToken.cardBackground,
+        borderRadius: BorderRadius.circular(DesignToken.cardRadius),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 버튼 행
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              _LocationButton(
-                icon: Icons.my_location,
-                label: '현 위치',
-                onPressed: ctrl.isLoadingLocation.value
-                    ? null
-                    : () => ctrl.fetchCurrentLocation(),
-                loading: ctrl.isLoadingLocation.value,
-              ),
-              _LocationButton(
-                icon: Icons.search,
-                label: '주소 찾기',
-                onPressed: () => _openAddressSearch(context, ctrl),
-              ),
-              _DateTimeButton(controller: ctrl),
-            ],
-          ),
+          Obx(() => Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  _LocationButton(
+                    icon: Icons.my_location,
+                    label: '현 위치',
+                    onPressed: ctrl.isLoadingLocation.value
+                        ? null
+                        : () => ctrl.fetchCurrentLocation(),
+                    loading: ctrl.isLoadingLocation.value,
+                  ),
+                  _LocationButton(
+                    icon: Icons.search,
+                    label: '주소 찾기',
+                    onPressed: () => _openAddressSearch(context, ctrl),
+                  ),
+                  _DateTimeButton(controller: ctrl),
+                ],
+              )),
           const SizedBox(height: 12),
           // 선택된 위치 표시
           Obx(() {
@@ -177,7 +189,7 @@ class _DateTimeButton extends StatelessWidget {
             context: context,
             initialDate: dt,
             firstDate: DateTime.now(),
-            lastDate: DateTime.now().add(const Duration(days: 7)),
+            lastDate: DateTime.now().add(const Duration(days: 6)),
           );
           if (picked == null || !context.mounted) return;
           final time = await showTimePicker(
@@ -192,6 +204,14 @@ class _DateTimeButton extends StatelessWidget {
             time.hour,
             time.minute,
           );
+          if (combined.isBefore(DateTime.now())) {
+            Get.snackbar(
+              '선택 불가',
+              '과거 시각은 선택할 수 없습니다.',
+              snackPosition: SnackPosition.BOTTOM,
+            );
+            return;
+          }
           controller.onDatetimeChanged(combined);
         },
         icon: const Icon(Icons.schedule, size: 18),

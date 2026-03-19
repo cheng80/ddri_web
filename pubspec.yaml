@@ -65,6 +65,8 @@ dependencies:
   # 위치·주소 검색 (Phase 2.1)
   geolocator: ^13.0.2
   kpostal_plus: ^1.0.3
+  flutter_map: ^8.2.1
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:
