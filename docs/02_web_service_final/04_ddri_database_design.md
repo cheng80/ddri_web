@@ -53,9 +53,13 @@
 - `prediction_time`
 - `target_time`
 - `station_id`
+- `request_path`
 - `horizon_hours`
-- `predicted_stock`
+- `current_bike_stock`
+- `predicted_rental_count`
+- `predicted_return_count`
 - `predicted_net_change`
+- `predicted_remaining_bikes`
 - `model_version`
 - `source_updated_at`
 - `created_at`

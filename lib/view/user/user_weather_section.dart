@@ -22,10 +22,10 @@ class UserWeatherSection extends StatelessWidget {
           ctrl.selectedForecast.value == null;
       final hasContent =
           ctrl.weeklyForecast.isNotEmpty || ctrl.selectedForecast.value != null;
-      final isInitialLoading =
+      final showReservedLoading =
           ctrl.isLoadingWeather.value && !hasError && !hasContent;
 
-      if (!hasError && !hasContent && !isInitialLoading) {
+      if (!hasError && !hasContent && !showReservedLoading) {
         return const SizedBox.shrink();
       }
 
@@ -72,8 +72,8 @@ class UserWeatherSection extends StatelessWidget {
             ),
             if (ctrl.weatherExpanded.value) ...[
               const SizedBox(height: 16),
-              if (isInitialLoading)
-                const Center(child: CircularProgressIndicator())
+              if (showReservedLoading)
+                const _UserWeatherLoadingPlaceholder()
               else if (hasError)
                 Row(
                   children: [
@@ -148,6 +148,51 @@ class UserWeatherSection extends StatelessWidget {
         ),
       );
     });
+  }
+}
+
+class _UserWeatherLoadingPlaceholder extends StatelessWidget {
+  const _UserWeatherLoadingPlaceholder();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(
+        minHeight: DesignToken.userWeatherReservedHeight,
+      ),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 2.4),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            '날씨 정보를 불러오는 중입니다.',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: const Color(0xFF64748B),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '주간 날씨와 선택 시간 정보를 같은 자리에서 준비합니다.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF94A3B8),
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 }
 

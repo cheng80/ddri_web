@@ -8,8 +8,13 @@ from typing import Optional
 
 from datetime import datetime
 
-from .beta_station_data import get_beta_admin_items, get_beta_weather_reference
+from .beta_station_data import (
+    get_beta_admin_items,
+    get_beta_admin_prediction_logs,
+    get_beta_weather_reference,
+)
 from ..core.runtime_config import get_service_mode, is_beta_mode
+from ..database.prediction_logs import save_prediction_logs_safely
 from ..utils.security import (
     validate_sort_by,
     validate_sort_order,
@@ -156,6 +161,15 @@ async def get_stations_risk(
             "weekly_forecast": [],
             "selected_forecast": None,
         }
+
+    prediction_logs = get_beta_admin_prediction_logs(
+        district_name=district,
+        urgent_only=urgent_only,
+        sort_by=sort_col,
+        sort_order=sort_dir,
+        base_datetime=base_dt,
+    )
+    save_prediction_logs_safely(prediction_logs)
 
     return {
         "base_datetime": base_dt,

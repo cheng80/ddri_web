@@ -34,6 +34,7 @@ class UserPageController extends GetxController {
   final RxString weatherErrorMessage = ''.obs;
   final RxString serviceMode = 'beta'.obs;
   final RxString listMode = ''.obs;
+  bool _shouldRefocusOnNextResult = false;
 
   /// 위치가 선택되었는지 (위경도 존재)
   bool get hasLocation => lat.value != null && lng.value != null;
@@ -63,6 +64,7 @@ class UserPageController extends GetxController {
     try {
       errorMessage.value = '';
       isLoadingLocation.value = true;
+      _shouldRefocusOnNextResult = true;
       final pos = await Geolocator.getCurrentPosition();
       ddriDebugPrint('[DDRI] 현 위치 좌표: lat=${pos.latitude}, lng=${pos.longitude}');
       lat.value = pos.latitude;
@@ -86,6 +88,7 @@ class UserPageController extends GetxController {
     lat.value = newLat;
     lng.value = newLng;
     address.value = addr;
+    _shouldRefocusOnNextResult = true;
     await Future.wait([_fetchStations(), _fetchWeather()]);
   }
 
@@ -118,14 +121,24 @@ class UserPageController extends GetxController {
       serviceMode.value = res.serviceMode;
       listMode.value = res.listMode;
       items.value = res.items;
-      if (res.items.isNotEmpty && focusedStation.value == null) {
+      if (res.items.isEmpty) {
+        focusedStation.value = null;
+      } else if (_shouldRefocusOnNextResult) {
         focusedStation.value = res.items.first;
+      } else {
+        final currentFocusedId = focusedStation.value?.stationId;
+        focusedStation.value =
+            res.items.firstWhereOrNull(
+              (item) => item.stationId == currentFocusedId,
+            ) ??
+            res.items.first;
       }
     } on ApiException catch (e, st) {
       ddriDebugPrint('[DDRI] 대여소 목록 조회 실패: $e');
       ddriDebugPrint('[DDRI] 스택: $st');
       errorMessage.value = e.message;
       items.clear();
+      focusedStation.value = null;
       serviceMode.value = 'beta';
       listMode.value = '';
     } catch (e, st) {
@@ -133,9 +146,11 @@ class UserPageController extends GetxController {
       ddriDebugPrint('[DDRI] 스택: $st');
       errorMessage.value = '대여소 목록을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.';
       items.clear();
+      focusedStation.value = null;
       serviceMode.value = 'beta';
       listMode.value = '';
     } finally {
+      _shouldRefocusOnNextResult = false;
       isLoading.value = false;
     }
   }
@@ -189,12 +204,14 @@ class UserPageController extends GetxController {
   /// 전체보기/반경 필터 변경 시 재조회
   Future<void> onRadiusFilterChanged(int? radiusM) async {
     setSelectedRadius(radiusM);
+    _shouldRefocusOnNextResult = true;
     if (hasLocation) await _fetchStations();
   }
 
   /// 시간 변경 시 재조회
   Future<void> onDatetimeChanged(DateTime dt) async {
     setTargetDatetime(dt);
+    _shouldRefocusOnNextResult = true;
     if (hasLocation) {
       await Future.wait([_fetchStations(), _fetchWeather()]);
     }

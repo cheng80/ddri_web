@@ -28,14 +28,11 @@ class AdminPageController extends GetxController {
   final Rx<StationRiskItem?> focusedStation = Rx<StationRiskItem?>(null);
   final Rx<RiskSummary?> summary = Rx<RiskSummary?>(null);
   final RxBool isLoading = false.obs;
-  final RxBool isSupplementReady = false.obs;
-  final RxBool isMapReady = false.obs;
   final RxBool weatherExpanded = true.obs;
   final RxString errorMessage = ''.obs;
   final RxBool exceptionsExpanded = false.obs;
   final RxString serviceMode = 'beta'.obs;
   final RxString listMode = ''.obs;
-  int _mapRenderTicket = 0;
 
   /// API용 ISO 8601 형식
   String get baseDatetimeIso =>
@@ -101,12 +98,9 @@ class AdminPageController extends GetxController {
   }
 
   Future<void> fetchRiskStations() async {
-    final requestTicket = ++_mapRenderTicket;
     try {
       errorMessage.value = '';
       isLoading.value = true;
-      isSupplementReady.value = false;
-      isMapReady.value = false;
       final res = await _api.getStationsRisk(
         baseDatetime: baseDatetimeIso,
         urgentOnly: urgentOnly.value,
@@ -145,16 +139,6 @@ class AdminPageController extends GetxController {
       ddriDebugPrint(
         '[DDRI] 관리자 목록: total=${res.summary.totalCount}, risk=${res.summary.riskCount}',
       );
-      await Future<void>.delayed(const Duration(milliseconds: 80));
-      if (!isClosed && requestTicket == _mapRenderTicket) {
-        isSupplementReady.value = true;
-      }
-      if (res.items.isNotEmpty) {
-        await Future<void>.delayed(const Duration(milliseconds: 160));
-        if (!isClosed && requestTicket == _mapRenderTicket) {
-          isMapReady.value = true;
-        }
-      }
     } on ApiException catch (e) {
       ddriDebugPrint('[DDRI] 관리자 목록 조회 실패(ApiException): ${e.message}');
       errorMessage.value = e.message;
@@ -166,8 +150,6 @@ class AdminPageController extends GetxController {
       summary.value = null;
       serviceMode.value = 'beta';
       listMode.value = '';
-      isSupplementReady.value = false;
-      isMapReady.value = false;
     } catch (e) {
       ddriDebugPrint('[DDRI] 관리자 목록 조회 실패: $e');
       errorMessage.value = '재배치 목록을 불러오지 못했습니다.';
@@ -179,8 +161,6 @@ class AdminPageController extends GetxController {
       summary.value = null;
       serviceMode.value = 'beta';
       listMode.value = '';
-      isSupplementReady.value = false;
-      isMapReady.value = false;
     } finally {
       isLoading.value = false;
     }

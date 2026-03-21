@@ -6,8 +6,9 @@ DDRI 사용자 페이지 API - 근처 대여소 조회
 from fastapi import APIRouter, Query, HTTPException
 from typing import Optional
 
-from .beta_station_data import get_beta_user_items
+from .beta_station_data import get_beta_user_items, get_beta_user_prediction_logs
 from ..core.runtime_config import get_service_mode, is_beta_mode
+from ..database.prediction_logs import save_prediction_logs_safely
 from ..utils.security import validate_iso_datetime, get_safe_bad_request_detail
 
 router = APIRouter()
@@ -55,6 +56,15 @@ async def get_stations_nearby(
             service_tag="",
         )
         list_mode = "live_runtime_fixed_6"
+
+    prediction_logs = get_beta_user_prediction_logs(
+        lat=lat,
+        lng=lng,
+        limit=limit or 6,
+        target_datetime=target_dt,
+        radius_m=radius_m,
+    )
+    save_prediction_logs_safely(prediction_logs)
 
     return {
         "target_datetime": target_dt,

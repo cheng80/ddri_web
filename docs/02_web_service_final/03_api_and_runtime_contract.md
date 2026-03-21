@@ -242,9 +242,13 @@ predicted_remaining_bikes = current_bike_stock - predicted_rental_count + predic
   "prediction_time": "2026-03-19T14:00:00+09:00",
   "target_time": "2026-03-19T18:00:00+09:00",
   "station_id": 2348,
+  "request_path": "/user",
   "horizon_hours": 4,
-  "predicted_stock": 3.2,
+  "current_bike_stock": 6.0,
+  "predicted_rental_count": 4.1,
+  "predicted_return_count": 1.3,
   "predicted_net_change": -2.8,
+  "predicted_remaining_bikes": 3.2,
   "model_version": "stock-horizon-ridge-v1"
 }
 ```
@@ -254,6 +258,8 @@ predicted_remaining_bikes = current_bike_stock - predicted_rental_count + predic
 
 현재 모델 가정 기준으로는 `prediction_logs` 정의 시 아래 항목 포함 여부를 검토할 수 있다.
 
+- `request_path`
+- `current_bike_stock`
 - `predicted_rental_count`
 - `predicted_return_count`
 - `predicted_remaining_bikes`

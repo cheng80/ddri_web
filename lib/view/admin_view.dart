@@ -142,21 +142,14 @@ class _DeferredAdminSupplement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.find<AdminPageController>();
-
-    return Obx(() {
-      if (!ctrl.isSupplementReady.value) {
-        return const SizedBox.shrink();
-      }
-      return const Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AdminWeatherSection(),
-          SizedBox(height: DesignToken.adminSectionSpacing),
-          AdminSummaryCards(),
-        ],
-      );
-    });
+    return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AdminWeatherSection(),
+        SizedBox(height: DesignToken.adminSectionSpacing),
+        AdminSummaryCards(),
+      ],
+    );
   }
 }
 
@@ -165,75 +158,50 @@ class _DeferredAdminSidePanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ctrl = Get.find<AdminPageController>();
-
-    return Obx(() {
-      if (!ctrl.isSupplementReady.value) {
-        return Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: const Color(0xFFF8FAFC),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0xFFE2E8F0)),
-          ),
-          child: Center(
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF8FAFC),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: const Color(0xFFE2E8F0)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: DesignToken.primary.withValues(alpha: 0.14),
+              ),
+            ),
             child: Text(
-              '목록을 먼저 표시하는 중입니다.',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: const Color(0xFF64748B),
-                fontWeight: FontWeight.w600,
+              '보조 패널',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: DesignToken.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
               ),
               textAlign: TextAlign.center,
             ),
           ),
-        );
-      }
-
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: DesignToken.primary.withValues(alpha: 0.14),
-                ),
-              ),
-              child: Text(
-                '보조 패널',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: DesignToken.primary,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.2,
-                ),
-                textAlign: TextAlign.center,
-              ),
+          const SizedBox(height: 14),
+          Text(
+            '예외 항목과 지도는 재배치 판단을 보조하는 정보로 유지합니다.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: const Color(0xFF64748B),
+              height: 1.5,
             ),
-            const SizedBox(height: 14),
-            Text(
-              '예외 항목과 지도는 재배치 판단을 보조하는 정보로 유지합니다.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: const Color(0xFF64748B),
-                height: 1.5,
-              ),
-            ),
-            SizedBox(height: DesignToken.adminSectionSpacing),
-            const AdminExceptionsSection(),
-            SizedBox(height: DesignToken.adminSectionSpacing),
-            const _DeferredAdminMap(),
-          ],
-        ),
-      );
-    });
+          ),
+          SizedBox(height: DesignToken.adminSectionSpacing),
+          const AdminExceptionsSection(),
+          SizedBox(height: DesignToken.adminSectionSpacing),
+          const _DeferredAdminMap(),
+        ],
+      ),
+    );
   }
 }
 
@@ -248,38 +216,7 @@ class _DeferredAdminMap extends StatelessWidget {
       if (ctrl.items.isEmpty) {
         return const AdminMapPlaceholder();
       }
-      if (ctrl.isMapReady.value) {
-        return const AdminMapPlaceholder();
-      }
-      return Container(
-        height: 320,
-        decoration: BoxDecoration(
-          color: const Color(0xFFF8FAFC),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
-        ),
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(
-                width: 28,
-                height: 28,
-                child: CircularProgressIndicator(strokeWidth: 2.4),
-              ),
-              const SizedBox(height: 14),
-              Text(
-                '목록을 먼저 표시한 뒤 지도를 준비 중입니다.',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: const Color(0xFF64748B),
-                  fontWeight: FontWeight.w600,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
+      return const AdminMapPlaceholder();
     });
   }
 }

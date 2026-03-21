@@ -31,9 +31,13 @@ prediction_logs
  - prediction_time
  - target_time
  - station_id
+ - request_path
  - horizon_hours
- - predicted_stock
+ - current_bike_stock
+ - predicted_rental_count
+ - predicted_return_count
  - predicted_net_change
+ - predicted_remaining_bikes
  - model_version
  - source_updated_at
  - created_at
@@ -48,9 +52,13 @@ erDiagram
         datetime prediction_time
         datetime target_time
         int station_id
+        string request_path
         int horizon_hours
-        float predicted_stock
+        float current_bike_stock
+        float predicted_rental_count
+        float predicted_return_count
         float predicted_net_change
+        float predicted_remaining_bikes
         string model_version
         datetime source_updated_at
         datetime created_at

@@ -145,7 +145,8 @@ class UserSearchArea extends StatelessWidget {
       ddriDebugPrint('[DDRI] 주소 검색 결과 좌표: lat=$la, lng=$ln');
       ctrl.applyAddressAndFetch(la, ln, result.address);
     } else {
-      ctrl.errorMessage.value = '선택한 주소의 좌표를 가져올 수 없습니다. 카카오 API 키(JavaScript 키)를 설정해 보세요.';
+      ctrl.errorMessage.value =
+          '선택한 주소의 좌표를 가져올 수 없습니다. 다른 주소를 선택하거나 잠시 후 다시 시도해 주세요.';
     }
   }
 }

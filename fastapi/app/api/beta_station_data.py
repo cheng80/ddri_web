@@ -283,6 +283,35 @@ def _enrich_station_prediction(station: dict, target_datetime: str | None) -> di
     return enriched
 
 
+def _resolve_horizon_hours(target_datetime: str | None) -> int:
+    if not target_datetime:
+        return 0
+    try:
+        target_dt = datetime.fromisoformat(str(target_datetime).replace("Z", "+00:00"))
+    except ValueError:
+        return 0
+    now = datetime.now(target_dt.tzinfo)
+    diff = target_dt - now
+    return max(0, round(diff.total_seconds() / 3600))
+
+
+def _build_prediction_log(station_view: dict, *, request_path: str, target_datetime: str | None) -> dict:
+    return {
+        "prediction_time": datetime.now().isoformat(),
+        "target_time": target_datetime,
+        "station_id": station_view["station_id"],
+        "request_path": request_path,
+        "horizon_hours": _resolve_horizon_hours(target_datetime),
+        "current_bike_stock": station_view.get("current_bike_stock"),
+        "predicted_rental_count": station_view.get("predicted_rental_count"),
+        "predicted_return_count": station_view.get("predicted_return_count"),
+        "predicted_net_change": station_view.get("predicted_net_change"),
+        "predicted_remaining_bikes": station_view.get("predicted_remaining_bikes"),
+        "model_version": station_view.get("model_version"),
+        "source_updated_at": station_view.get("source_updated_at"),
+    }
+
+
 def get_beta_user_items(
     lat: float,
     lng: float,
@@ -320,6 +349,33 @@ def get_beta_user_items(
 
     items.sort(key=lambda item: item["distance_m"])
     return items[:limit]
+
+
+def get_beta_user_prediction_logs(
+    lat: float,
+    lng: float,
+    limit: int,
+    target_datetime: str | None = None,
+    radius_m: int | None = None,
+) -> list[dict]:
+    """사용자 조회 결과와 동일한 조건으로 예측 로그 저장용 payload를 생성한다."""
+    station_views = []
+    for station in BETA_STATIONS:
+        station_view = _enrich_station_prediction(station, target_datetime)
+        station_view["distance_m"] = round(
+            _haversine_distance_m(lat, lng, station_view["latitude"], station_view["longitude"]),
+            1,
+        )
+        station_views.append(station_view)
+
+    if radius_m is not None:
+        station_views = [item for item in station_views if item["distance_m"] <= float(radius_m)]
+
+    station_views.sort(key=lambda item: item["distance_m"])
+    return [
+        _build_prediction_log(item, request_path="/user", target_datetime=target_datetime)
+        for item in station_views[:limit]
+    ]
 
 
 def get_beta_admin_items(
@@ -370,6 +426,32 @@ def get_beta_admin_items(
     for index, item in enumerate(items, start=1):
         item["reallocation_priority"] = index
     return items
+
+
+def get_beta_admin_prediction_logs(
+    district_name: str | None,
+    urgent_only: bool | None,
+    sort_by: str,
+    sort_order: str,
+    base_datetime: str | None = None,
+) -> list[dict]:
+    """관리자 조회 결과와 동일한 조건으로 예측 로그 저장용 payload를 생성한다."""
+    station_views = []
+    for station in BETA_STATIONS:
+        station_view = _enrich_station_prediction(station, base_datetime)
+        station_views.append(station_view)
+
+    if district_name:
+        station_views = [item for item in station_views if item["district_name"] == district_name]
+    if urgent_only:
+        station_views = [item for item in station_views if item["predicted_remaining_bikes"] <= 5.0]
+
+    reverse = sort_order == "desc"
+    station_views.sort(key=lambda item: item[sort_by], reverse=reverse)
+    return [
+        _build_prediction_log(item, request_path="/admin", target_datetime=base_datetime)
+        for item in station_views
+    ]
 
 
 def get_beta_master_items(

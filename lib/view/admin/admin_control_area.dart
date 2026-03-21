@@ -63,32 +63,38 @@ class AdminControlArea extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ],
-                      ),
+                    ),
                     ),
                     const Spacer(),
-                    _SimpleDropdown(
-                      label: '정렬',
-                      value: ctrl.sortBy.value,
-                      items: AdminPageController.sortByOptions
-                          .map((k) => (k, '정렬: ${_sortByLabel(k)}'))
-                          .toList(),
-                      onChanged: (v) => ctrl.setSortBy(v ?? 'risk_score'),
+                    Obx(
+                      () => _SimpleDropdown(
+                        label: '정렬',
+                        value: ctrl.sortBy.value,
+                        items: AdminPageController.sortByOptions
+                            .map((k) => (k, '정렬: ${_sortByLabel(k)}'))
+                            .toList(),
+                        onChanged: (v) => ctrl.setSortBy(v ?? 'risk_score'),
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    _SimpleDropdown(
-                      label: '행정동',
-                      value: ctrl.districtName.value ?? '전체',
-                      items: AdminPageController.districtOptions
-                          .map((s) => (s, s == '전체' ? '행정동 전체' : s))
-                          .toList(),
-                      onChanged: (v) => ctrl.setDistrictName(v),
+                    Obx(
+                      () => _SimpleDropdown(
+                        label: '행정동',
+                        value: ctrl.districtName.value ?? '전체',
+                        items: AdminPageController.districtOptions
+                            .map((s) => (s, s == '전체' ? '행정동 전체' : s))
+                            .toList(),
+                        onChanged: (v) => ctrl.setDistrictName(v),
+                      ),
                     ),
                     const SizedBox(width: 12),
-                    _SimpleDropdown(
-                      label: '순서',
-                      value: ctrl.sortOrder.value,
-                      items: const [('desc', '내림차순'), ('asc', '오름차순')],
-                      onChanged: (v) => ctrl.setSortOrder(v ?? 'desc'),
+                    Obx(
+                      () => _SimpleDropdown(
+                        label: '순서',
+                        value: ctrl.sortOrder.value,
+                        items: const [('desc', '내림차순'), ('asc', '오름차순')],
+                        onChanged: (v) => ctrl.setSortOrder(v ?? 'desc'),
+                      ),
                     ),
                   ],
                 )
@@ -130,27 +136,33 @@ class AdminControlArea extends StatelessWidget {
                       spacing: 12,
                       runSpacing: 12,
                       children: [
-                        _SimpleDropdown(
-                          label: '정렬',
-                          value: ctrl.sortBy.value,
-                          items: AdminPageController.sortByOptions
-                              .map((k) => (k, '정렬: ${_sortByLabel(k)}'))
-                              .toList(),
-                          onChanged: (v) => ctrl.setSortBy(v ?? 'risk_score'),
+                        Obx(
+                          () => _SimpleDropdown(
+                            label: '정렬',
+                            value: ctrl.sortBy.value,
+                            items: AdminPageController.sortByOptions
+                                .map((k) => (k, '정렬: ${_sortByLabel(k)}'))
+                                .toList(),
+                            onChanged: (v) => ctrl.setSortBy(v ?? 'risk_score'),
+                          ),
                         ),
-                        _SimpleDropdown(
-                          label: '행정동',
-                          value: ctrl.districtName.value ?? '전체',
-                          items: AdminPageController.districtOptions
-                              .map((s) => (s, s == '전체' ? '행정동 전체' : s))
-                              .toList(),
-                          onChanged: (v) => ctrl.setDistrictName(v),
+                        Obx(
+                          () => _SimpleDropdown(
+                            label: '행정동',
+                            value: ctrl.districtName.value ?? '전체',
+                            items: AdminPageController.districtOptions
+                                .map((s) => (s, s == '전체' ? '행정동 전체' : s))
+                                .toList(),
+                            onChanged: (v) => ctrl.setDistrictName(v),
+                          ),
                         ),
-                        _SimpleDropdown(
-                          label: '순서',
-                          value: ctrl.sortOrder.value,
-                          items: const [('desc', '내림차순'), ('asc', '오름차순')],
-                          onChanged: (v) => ctrl.setSortOrder(v ?? 'desc'),
+                        Obx(
+                          () => _SimpleDropdown(
+                            label: '순서',
+                            value: ctrl.sortOrder.value,
+                            items: const [('desc', '내림차순'), ('asc', '오름차순')],
+                            onChanged: (v) => ctrl.setSortOrder(v ?? 'desc'),
+                          ),
                         ),
                       ],
                     ),

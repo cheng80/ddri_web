@@ -44,6 +44,10 @@ class DesignToken {
   static const double userMapMinHeight = 280;
   /// 지도 최대 높이
   static const double userMapMaxHeight = 450;
+  /// 사용자 날씨 섹션 초기 예약 높이
+  static const double userWeatherReservedHeight = 320;
+  /// 관리자 날씨 섹션 초기 예약 높이
+  static const double adminWeatherReservedHeight = 300;
 
   // ─── 관리자 리스트 영역 높이 (px) ─────────
   /// 이 개수 이하면 콘텐츠 높이만 사용 (shrinkWrap)

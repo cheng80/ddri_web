@@ -28,6 +28,7 @@ class _UserMapSectionState extends State<UserMapSection> {
   final MapController _mapController = MapController();
   late final UserPageController _ctrl;
   Worker? _focusWorker;
+  Worker? _itemsWorker;
   late LatLng _currentCenter;
   double _currentZoom = _defaultZoom;
 
@@ -39,6 +40,13 @@ class _UserMapSectionState extends State<UserMapSection> {
     _focusWorker = ever<StationNearbyItem?>(_ctrl.focusedStation, (station) {
       if (station == null) return;
       unawaited(_moveToStation(station));
+    });
+    _itemsWorker = ever<List<StationNearbyItem>>(_ctrl.items, (items) {
+      if (!_ctrl.hasLocation || items.isNotEmpty || !mounted) return;
+      final userCenter = LatLng(_ctrl.lat.value!, _ctrl.lng.value!);
+      _currentCenter = userCenter;
+      _currentZoom = _defaultZoom;
+      _mapController.move(userCenter, _defaultZoom);
     });
   }
 
@@ -74,6 +82,7 @@ class _UserMapSectionState extends State<UserMapSection> {
   @override
   void dispose() {
     _focusWorker?.dispose();
+    _itemsWorker?.dispose();
     super.dispose();
   }
 
@@ -87,7 +96,6 @@ class _UserMapSectionState extends State<UserMapSection> {
       }
 
       final userCenter = LatLng(ctrl.lat.value!, ctrl.lng.value!);
-      _currentCenter = userCenter;
       final stationMarkers = ctrl.items
           .map(
             (station) => Marker(
@@ -162,9 +170,9 @@ class _UserMapSectionState extends State<UserMapSection> {
                     ),
                     ...stationMarkers,
                   ],
-                ),
-              ],
-            ),
+                  ),
+                ],
+              ),
             ),
             Positioned(
               top: 12,
