@@ -2,6 +2,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../common/beta/beta_mode_widgets.dart';
 import '../../vm/user_page_controller.dart';
 import 'user_station_card.dart';
 
@@ -98,6 +99,11 @@ class UserStationList extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
             ),
+            if (ctrl.isBetaMode)
+              const BetaModeHelperText(
+                text: '베타 기준 선별 6개 대여소만 목록에 표시됩니다.',
+                compact: true,
+              ),
             if (ctrl.isLoading.value)
               const Padding(
                 padding: EdgeInsets.all(8),
@@ -126,6 +132,11 @@ class UserStationList extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
+          if (ctrl.isBetaMode)
+            const BetaModeHelperText(
+              text: '베타 기준 선별 6개 대여소만 목록에 표시됩니다.',
+              compact: true,
+            ),
           if (ctrl.isLoading.value)
             const Padding(
               padding: EdgeInsets.all(8),

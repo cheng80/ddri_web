@@ -63,7 +63,7 @@ class AdminControlArea extends StatelessWidget {
                                 ?.copyWith(fontWeight: FontWeight.w600),
                           ),
                         ],
-                    ),
+                      ),
                     ),
                     const Spacer(),
                     Obx(
@@ -196,7 +196,7 @@ class AdminControlArea extends StatelessWidget {
       case 'reallocation_priority':
         return '우선순위';
       case 'stock_gap':
-        return '재고차이';
+        return '예상 부족 수량';
       default:
         return k;
     }

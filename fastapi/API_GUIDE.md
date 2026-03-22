@@ -119,27 +119,38 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
+현재 `requirements.txt`는 실행과 현재 기능에 필요한 런타임 의존성만 포함한다.
+
+- `fastapi`, `uvicorn`: API 서버 실행
+- `python-dotenv`: `fastapi/.env` 로드
+- `pymysql`: `prediction_logs` 저장용 MySQL 연결
+- `joblib`: top6 예측 런타임 번들 로드
+- `requests`: 외부 재고/날씨 API 호출
+
 ### 3. 환경변수
 
 `fastapi/.env` 예시:
 
 ```env
 DDRI_SERVICE_MODE=beta
-SEOUL_BIKE_API_KEY=your_seoul_bike_api_key
 DDRI_BIKE_API_CACHE_SECONDS=30
 DB_HOST=your_host
 DB_USER=your_user
 DB_PASSWORD=your_password
 DB_NAME=ddri_db
 DB_PORT=13306
+SEOUL_RTD_API_KEY=your_seoul_rtd_api_key
+SEOUL_BIKE_API_KEY=your_seoul_bike_api_key
 ```
 
 설명:
 
 - `DDRI_SERVICE_MODE=beta`: 현재 top6 베타 정책 사용
 - `DDRI_SERVICE_MODE=live`: 실제 실시간 재고 + 예측 런타임 사용, 현재는 `live_runtime_fixed_6`
-- `SEOUL_BIKE_API_KEY`: OA-15493 `bikeList` 실시간 재고 API 키
 - `DDRI_BIKE_API_CACHE_SECONDS`: 실시간 재고 호출 캐시 TTL
+- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`: `prediction_logs` 저장용 MySQL 연결 정보
+- `SEOUL_RTD_API_KEY`: 서울 열린데이터광장 대체/폴백 API 키
+- `SEOUL_BIKE_API_KEY`: OA-15493 `bikeList` 실시간 재고 API 키
 - 현재 DB는 필수는 아니며, 추후 `prediction_logs` 저장 시 사용 가능
 
 ### 4. 서버 실행

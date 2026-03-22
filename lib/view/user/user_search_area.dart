@@ -31,39 +31,41 @@ class UserSearchArea extends StatelessWidget {
           ),
         ],
       ),
-        child: Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 버튼 행
-          Obx(() => Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  _LocationButton(
-                    icon: Icons.my_location,
-                    label: '현 위치',
-                    onPressed: ctrl.isLoadingLocation.value
-                        ? null
-                        : () => ctrl.fetchCurrentLocation(),
-                    loading: ctrl.isLoadingLocation.value,
-                  ),
-                  _LocationButton(
-                    icon: Icons.search,
-                    label: '주소 찾기',
-                    onPressed: () => _openAddressSearch(context, ctrl),
-                  ),
-                  _DateTimeButton(controller: ctrl),
-                ],
-              )),
+          Obx(
+            () => Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _LocationButton(
+                  icon: Icons.my_location,
+                  label: '현 위치',
+                  onPressed: ctrl.isLoadingLocation.value
+                      ? null
+                      : () => ctrl.fetchCurrentLocation(),
+                  loading: ctrl.isLoadingLocation.value,
+                ),
+                _LocationButton(
+                  icon: Icons.search,
+                  label: '주소 찾기',
+                  onPressed: () => _openAddressSearch(context, ctrl),
+                ),
+                _DateTimeButton(controller: ctrl),
+              ],
+            ),
+          ),
           const SizedBox(height: 12),
           // 선택된 위치 표시
           Obx(() {
             if (ctrl.address.value.isEmpty) {
               return Text(
                 '위치를 선택해 주세요',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: Colors.grey.shade600),
               );
             }
             return Text(
@@ -105,9 +107,9 @@ class UserSearchArea extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 ctrl.errorMessage.value,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.red,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.red),
               ),
             );
           }),
@@ -121,7 +123,7 @@ class UserSearchArea extends StatelessWidget {
     final result = await Get.to<Kpostal>(
       () => KpostalPlusView(
         title: '주소 검색',
-        kakaoKey: AppConfig.kakaoJsKey ?? '',
+        kakaoKey: AppConfig.kakaoJsKey,
         callback: (_) {}, // 패키지가 pop 처리, 여기서는 아무것도 하지 않음
       ),
     );
@@ -166,21 +168,25 @@ class _LocationButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return FilledButton.icon(
+    return FilledButton(
       onPressed: loading ? null : onPressed,
-      icon: loading
-          ? SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            )
-          : Icon(icon, size: 18),
-      label: Text(label),
-      style: FilledButton.styleFrom(
-        backgroundColor: DesignToken.primary,
+      style: FilledButton.styleFrom(backgroundColor: DesignToken.primary),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          loading
+              ? SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(icon, size: 18),
+          const SizedBox(width: 8),
+          Text(label, softWrap: false),
+        ],
       ),
     );
   }
@@ -195,7 +201,7 @@ class _DateTimeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Obx(() {
       final dt = controller.targetDatetime.value;
-      return OutlinedButton.icon(
+      return OutlinedButton(
         onPressed: () async {
           final picked = await showDatePicker(
             context: context,
@@ -226,9 +232,16 @@ class _DateTimeButton extends StatelessWidget {
           }
           controller.onDatetimeChanged(combined);
         },
-        icon: const Icon(Icons.schedule, size: 18),
-        label: Text(
-          '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.schedule, size: 18),
+            const SizedBox(width: 8),
+            Text(
+              '${dt.month}/${dt.day} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}',
+              softWrap: false,
+            ),
+          ],
         ),
       );
     });

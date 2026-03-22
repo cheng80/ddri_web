@@ -4,6 +4,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../common/beta/beta_mode_widgets.dart';
 import '../../common/api/models/station_models.dart';
 import '../../core/design_token.dart';
 import '../../utils/ddri_debug.dart';
@@ -68,6 +69,11 @@ class AdminStationList extends StatelessWidget {
           if (useCardLayout) {
             return Column(
               children: [
+                if (ctrl.isBetaMode)
+                  const BetaModeHelperText(
+                    text: '베타 기준 선별 6개 대여소만 목록에 표시됩니다.',
+                    compact: true,
+                  ),
                 if (ctrl.isLoading.value)
                   const LinearProgressIndicator(minHeight: 2),
                 ...ctrl.items.map(_StationMobileCard.new),
@@ -107,6 +113,11 @@ class AdminStationList extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (ctrl.isBetaMode)
+                  const BetaModeHelperText(
+                    text: '베타 기준 선별 6개 대여소만 목록에 표시됩니다.',
+                    compact: true,
+                  ),
                 if (ctrl.isLoading.value)
                   const LinearProgressIndicator(minHeight: 2),
                 useShrinkWrap
@@ -129,7 +140,8 @@ class _StationMobileCard extends StatelessWidget {
 
   final StationRiskItem station;
 
-  int get _predictedRemainingDisplay => math.max(0, station.predictedRemainingBikes.ceil());
+  int get _predictedRemainingDisplay =>
+      math.max(0, station.predictedRemainingBikes.ceil());
   int get _shortageDisplay => math.max(0, station.shortageBikes.ceil());
 
   Color get _riskColor {
@@ -287,8 +299,8 @@ class _StationMobileCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      station.predictedRemainingBikes <= 5
-                          ? '예상 잔여 $_predictedRemainingDisplay대'
+                      station.shortageBikes > 0
+                          ? '부족 예상 $_shortageDisplay대'
                           : '안정',
                       style: TextStyle(
                         color: _riskColor,
@@ -394,7 +406,8 @@ class _StationDataRow extends StatelessWidget {
 
   final StationRiskItem station;
 
-  int get _predictedRemainingDisplay => math.max(0, station.predictedRemainingBikes.ceil());
+  int get _predictedRemainingDisplay =>
+      math.max(0, station.predictedRemainingBikes.ceil());
   int get _shortageDisplay => math.max(0, station.shortageBikes.ceil());
 
   Color get _riskColor {
@@ -524,8 +537,8 @@ class _StationDataRow extends StatelessWidget {
                       SizedBox(
                         width: 88,
                         child: Text(
-                          station.predictedRemainingBikes <= 5
-                              ? '잔여 $_predictedRemainingDisplay대'
+                          station.shortageBikes > 0
+                              ? '부족 $_shortageDisplay대'
                               : '안정',
                           style: TextStyle(
                             color: _riskColor,

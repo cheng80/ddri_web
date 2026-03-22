@@ -5,6 +5,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../common/beta/beta_mode_widgets.dart';
 import '../../common/api/models/station_models.dart';
 import '../../core/design_token.dart';
 import '../../utils/ddri_debug.dart';
@@ -23,6 +24,7 @@ class _AdminMapPlaceholderState extends State<AdminMapPlaceholder> {
   static const double _minZoom = 10.0;
   static const double _maxZoom = 15.75;
   static const double _zoomStep = 0.25;
+  static const double _mapHeight = 380;
 
   final MapController _mapController = MapController();
   late final AdminPageController _ctrl;
@@ -132,106 +134,120 @@ class _AdminMapPlaceholderState extends State<AdminMapPlaceholder> {
         );
       }).toList();
 
-      return Container(
-        height: 320,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: DesignToken.primary.withValues(alpha: 0.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            FlutterMap(
-              mapController: _mapController,
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: zoom,
-                minZoom: _minZoom,
-                maxZoom: _maxZoom,
-                interactionOptions: const InteractionOptions(
-                  flags: InteractiveFlag.all & ~InteractiveFlag.scrollWheelZoom,
-                ),
-                onPositionChanged: (position, _) {
-                  _currentCenter = position.center;
-                  _currentZoom = position.zoom;
-                },
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (ctrl.isBetaMode)
+            const BetaModeHelperText(text: '지도에는 베타 대상 대여소만 표시됩니다.'),
+          Container(
+            height: _mapHeight,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: DesignToken.primary.withValues(alpha: 0.2),
               ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'ddri_web',
-                  maxNativeZoom: 16,
-                  keepBuffer: 1,
-                  panBuffer: 0,
-                  tileUpdateTransformer: TileUpdateTransformers.debounce(
-                    const Duration(milliseconds: 80),
-                  ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.04),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
-                MarkerLayer(markers: markers),
               ],
             ),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.92),
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
+            clipBehavior: Clip.antiAlias,
+            child: Stack(
+              children: [
+                FlutterMap(
+                  mapController: _mapController,
+                  options: MapOptions(
+                    initialCenter: center,
+                    initialZoom: zoom,
+                    minZoom: _minZoom,
+                    maxZoom: _maxZoom,
+                    interactionOptions: const InteractionOptions(
+                      flags:
+                          InteractiveFlag.all &
+                          ~InteractiveFlag.scrollWheelZoom,
                     ),
+                    onPositionChanged: (position, _) {
+                      _currentCenter = position.center;
+                      _currentZoom = position.zoom;
+                    },
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      userAgentPackageName: 'ddri_web',
+                      maxNativeZoom: 16,
+                      keepBuffer: 1,
+                      panBuffer: 0,
+                      tileUpdateTransformer: TileUpdateTransformers.debounce(
+                        const Duration(milliseconds: 80),
+                      ),
+                    ),
+                    MarkerLayer(markers: markers),
                   ],
                 ),
-                child: Text(
-                  '필터 결과 지도',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF334155),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.92),
+                      borderRadius: BorderRadius.circular(999),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1),
+                        ),
+                      ],
+                    ),
+                    child: Text(
+                      '필터 결과 지도',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        fontWeight: FontWeight.w700,
+                        color: const Color(0xFF334155),
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Column(
+                    children: [
+                      _MapActionButton(
+                        onPressed: _canZoomIn ? () => _zoomBy(_zoomStep) : null,
+                        icon: Icons.add,
+                        tooltip: '지도 확대',
+                      ),
+                      const SizedBox(height: 8),
+                      _MapActionButton(
+                        onPressed: _canZoomOut
+                            ? () => _zoomBy(-_zoomStep)
+                            : null,
+                        icon: Icons.remove,
+                        tooltip: '지도 축소',
+                      ),
+                      const SizedBox(height: 8),
+                      _MapActionButton(
+                        onPressed: _resetMapView,
+                        icon: Icons.refresh,
+                        tooltip: '지도 초기화',
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Column(
-                children: [
-                  _MapActionButton(
-                    onPressed: _canZoomIn ? () => _zoomBy(_zoomStep) : null,
-                    icon: Icons.add,
-                    tooltip: '지도 확대',
-                  ),
-                  const SizedBox(height: 8),
-                  _MapActionButton(
-                    onPressed: _canZoomOut ? () => _zoomBy(-_zoomStep) : null,
-                    icon: Icons.remove,
-                    tooltip: '지도 축소',
-                  ),
-                  const SizedBox(height: 8),
-                  _MapActionButton(
-                    onPressed: _resetMapView,
-                    icon: Icons.refresh,
-                    tooltip: '지도 초기화',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       );
     });
   }
@@ -325,7 +341,7 @@ class _EmptyAdminMap extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 320,
+      height: _AdminMapPlaceholderState._mapHeight,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [Color(0xFFE2E8F0), Color(0xFFCBD5E1)],

@@ -6,6 +6,7 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:get/get.dart';
 import 'package:latlong2/latlong.dart';
 
+import '../../common/beta/beta_mode_widgets.dart';
 import '../../common/api/models/station_models.dart';
 import '../../core/design_token.dart';
 import '../../vm/user_page_controller.dart';
@@ -104,7 +105,8 @@ class _UserMapSectionState extends State<UserMapSection> {
               height: 38,
               child: _StationMarker(
                 level: station.availabilityLevel,
-                selected: ctrl.focusedStation.value?.stationId == station.stationId,
+                selected:
+                    ctrl.focusedStation.value?.stationId == station.stationId,
               ),
             ),
           )
@@ -115,118 +117,143 @@ class _UserMapSectionState extends State<UserMapSection> {
           final h = constraints.maxHeight.isFinite && constraints.maxHeight > 0
               ? constraints.maxHeight
               : DesignToken.userMapMinHeight;
-          return Container(
-            margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          return SizedBox(
             height: h,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: DesignToken.primary.withValues(alpha: 0.18)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (ctrl.isBetaMode)
+                  const BetaModeHelperText(text: '지도에는 베타 대상 대여소만 표시됩니다.'),
+                Expanded(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: DesignToken.primary.withValues(alpha: 0.18),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      children: [
+                        RepaintBoundary(
+                          child: FlutterMap(
+                            mapController: _mapController,
+                            options: MapOptions(
+                              initialCenter: userCenter,
+                              initialZoom: _defaultZoom,
+                              minZoom: _minZoom,
+                              maxZoom: _maxZoom,
+                              interactionOptions: const InteractionOptions(
+                                // 웹에서는 지도 위 마우스 휠이 페이지 스크롤을 막기 쉬워서 비활성화한다.
+                                flags:
+                                    InteractiveFlag.all &
+                                    ~InteractiveFlag.scrollWheelZoom,
+                              ),
+                              onPositionChanged: (position, _) {
+                                _currentCenter = position.center;
+                                _currentZoom = position.zoom;
+                              },
+                            ),
+                            children: [
+                              TileLayer(
+                                urlTemplate:
+                                    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                userAgentPackageName: 'ddri_web',
+                                maxNativeZoom: 16,
+                                keepBuffer: 1,
+                                panBuffer: 0,
+                                tileUpdateTransformer:
+                                    TileUpdateTransformers.debounce(
+                                      const Duration(milliseconds: 80),
+                                    ),
+                              ),
+                              MarkerLayer(
+                                markers: [
+                                  Marker(
+                                    point: userCenter,
+                                    width: 26,
+                                    height: 26,
+                                    child: const _UserMarker(),
+                                  ),
+                                  ...stationMarkers,
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Positioned(
+                          top: 12,
+                          left: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.90),
+                              borderRadius: BorderRadius.circular(999),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.06),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              '주변 대여소 지도',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF334155),
+                                  ),
+                            ),
+                          ),
+                        ),
+                        Positioned(
+                          top: 12,
+                          right: 12,
+                          child: Column(
+                            children: [
+                              _MapActionButton(
+                                onPressed: _canZoomIn
+                                    ? () => _zoomBy(_zoomStep)
+                                    : null,
+                                icon: Icons.add,
+                                tooltip: '지도 확대',
+                              ),
+                              const SizedBox(height: 8),
+                              _MapActionButton(
+                                onPressed: _canZoomOut
+                                    ? () => _zoomBy(-_zoomStep)
+                                    : null,
+                                icon: Icons.remove,
+                                tooltip: '지도 축소',
+                              ),
+                              const SizedBox(height: 8),
+                              _MapActionButton(
+                                onPressed: _resetMapView,
+                                icon: Icons.refresh,
+                                tooltip: '지도 초기화',
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ],
             ),
-            clipBehavior: Clip.antiAlias,
-            child: Stack(
-          children: [
-            RepaintBoundary(
-              child: FlutterMap(
-                mapController: _mapController,
-                options: MapOptions(
-                  initialCenter: userCenter,
-                  initialZoom: _defaultZoom,
-                  minZoom: _minZoom,
-                  maxZoom: _maxZoom,
-                  interactionOptions: const InteractionOptions(
-                    // 웹에서는 지도 위 마우스 휠이 페이지 스크롤을 막기 쉬워서 비활성화한다.
-                    flags: InteractiveFlag.all & ~InteractiveFlag.scrollWheelZoom,
-                  ),
-                  onPositionChanged: (position, _) {
-                    _currentCenter = position.center;
-                    _currentZoom = position.zoom;
-                  },
-                ),
-                children: [
-                  TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                    userAgentPackageName: 'ddri_web',
-                    maxNativeZoom: 16,
-                    keepBuffer: 1,
-                    panBuffer: 0,
-                    tileUpdateTransformer: TileUpdateTransformers.debounce(
-                      const Duration(milliseconds: 80),
-                    ),
-                  ),
-                  MarkerLayer(
-                  markers: [
-                    Marker(
-                      point: userCenter,
-                      width: 26,
-                      height: 26,
-                      child: const _UserMarker(),
-                    ),
-                    ...stationMarkers,
-                  ],
-                  ),
-                ],
-              ),
-            ),
-            Positioned(
-              top: 12,
-              left: 12,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.90),
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.06),
-                      blurRadius: 4,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Text(
-                  '주변 대여소 지도',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: const Color(0xFF334155),
-                      ),
-                ),
-              ),
-            ),
-            Positioned(
-              top: 12,
-              right: 12,
-              child: Column(
-                children: [
-                  _MapActionButton(
-                    onPressed: _canZoomIn ? () => _zoomBy(_zoomStep) : null,
-                    icon: Icons.add,
-                    tooltip: '지도 확대',
-                  ),
-                  const SizedBox(height: 8),
-                  _MapActionButton(
-                    onPressed: _canZoomOut ? () => _zoomBy(-_zoomStep) : null,
-                    icon: Icons.remove,
-                    tooltip: '지도 축소',
-                  ),
-                  const SizedBox(height: 8),
-                  _MapActionButton(
-                    onPressed: _resetMapView,
-                    icon: Icons.refresh,
-                    tooltip: '지도 초기화',
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
+          );
         },
       );
     });
@@ -278,7 +305,9 @@ class _MapPlaceholder extends StatelessWidget {
           height: h,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: DesignToken.primary.withValues(alpha: 0.18)),
+            border: Border.all(
+              color: DesignToken.primary.withValues(alpha: 0.18),
+            ),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.04),
@@ -298,8 +327,8 @@ class _MapPlaceholder extends StatelessWidget {
                     Text(
                       '위치를 불러오는 중...',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
+                        color: Colors.grey.shade600,
+                      ),
                     ),
                   ],
                 ),
@@ -320,17 +349,17 @@ class _MapPlaceholder extends StatelessWidget {
                     Text(
                       '위치를 선택해 주세요',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.grey.shade700,
-                            fontWeight: FontWeight.w600,
-                          ),
+                        color: Colors.grey.shade700,
+                        fontWeight: FontWeight.w600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       '현 위치 또는 주소 검색으로 대여소를 조회할 수 있습니다',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: Colors.grey.shade600,
-                          ),
+                        color: Colors.grey.shade600,
+                      ),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
@@ -382,10 +411,7 @@ class _StationMarker extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.white,
-              width: selected ? 3 : 2,
-            ),
+            border: Border.all(color: Colors.white, width: selected ? 3 : 2),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.16),
@@ -396,11 +422,7 @@ class _StationMarker extends StatelessWidget {
           ),
           child: const Icon(Icons.pedal_bike, size: 13, color: Colors.white),
         ),
-        Container(
-          width: 2,
-          height: 10,
-          color: color.withValues(alpha: 0.9),
-        ),
+        Container(width: 2, height: 10, color: color.withValues(alpha: 0.9)),
       ],
     );
   }

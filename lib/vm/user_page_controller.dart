@@ -1,4 +1,7 @@
 // DDRI 사용자 컨트롤러: 위치/주소/반경/시간, 대여소·날씨 API, focusedStation
+import 'dart:async';
+
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:get/get.dart';
 
@@ -39,13 +42,12 @@ class UserPageController extends GetxController {
   /// 위치가 선택되었는지 (위경도 존재)
   bool get hasLocation => lat.value != null && lng.value != null;
   bool get isBetaMode => serviceMode.value == 'beta';
-  String get stationListTitle =>
-      isBetaMode ? '베타 대여소 ${items.length}개' : '주변 대여소 ${items.length}개';
+  String get stationListTitle => '대여소 ${items.length}개';
 
   @override
   void onInit() {
     super.onInit();
-    // 페이지 진입 시 현 위치 자동 로드 (권한 거부/실패 시 검색 영역·플레이스홀더로 대체)
+    // 페이지 진입 시 현 위치 자동 로드 (실패 시 검색 영역·플레이스홀더로 대체)
     if (!hasLocation) {
       fetchCurrentLocation();
     }
@@ -65,14 +67,70 @@ class UserPageController extends GetxController {
       errorMessage.value = '';
       isLoadingLocation.value = true;
       _shouldRefocusOnNextResult = true;
+      if (kIsWeb) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: WebSettings(
+            accuracy: LocationAccuracy.medium,
+            timeLimit: Duration(seconds: 15),
+            maximumAge: Duration(minutes: 1),
+          ),
+        );
+        ddriDebugPrint(
+          '[DDRI] 현 위치 좌표(web): lat=${pos.latitude}, lng=${pos.longitude}',
+        );
+        lat.value = pos.latitude;
+        lng.value = pos.longitude;
+        address.value = '현재 위치';
+        await Future.wait([_fetchStations(), _fetchWeather()]);
+        return;
+      }
+
+      final serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        errorMessage.value = '기기 위치 서비스가 꺼져 있습니다. 위치 서비스를 켠 뒤 다시 시도해 주세요.';
+        return;
+      }
+
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      if (permission == LocationPermission.denied) {
+        errorMessage.value = '위치 권한이 필요합니다. 브라우저에서 위치 접근을 허용한 뒤 다시 시도해 주세요.';
+        return;
+      }
+
+      if (permission == LocationPermission.deniedForever) {
+        errorMessage.value =
+            '브라우저에서 위치 접근이 차단되어 있습니다. 사이트 권한에서 위치를 허용한 뒤 다시 시도해 주세요.';
+        return;
+      }
+
       final pos = await Geolocator.getCurrentPosition();
-      ddriDebugPrint('[DDRI] 현 위치 좌표: lat=${pos.latitude}, lng=${pos.longitude}');
+      ddriDebugPrint(
+        '[DDRI] 현 위치 좌표: lat=${pos.latitude}, lng=${pos.longitude}',
+      );
       lat.value = pos.latitude;
       lng.value = pos.longitude;
       address.value = '현재 위치';
       await Future.wait([_fetchStations(), _fetchWeather()]);
+    } on PermissionDeniedException catch (e) {
+      ddriDebugPrint('[DDRI] 현 위치 권한 거부: $e');
+      errorMessage.value =
+          '위치 권한이 필요합니다. 브라우저에서 위치 접근을 허용한 뒤 다시 시도해 주세요.';
+    } on PositionUpdateException catch (e) {
+      ddriDebugPrint('[DDRI] 현 위치 조회 실패: $e');
+      errorMessage.value =
+          '브라우저가 현재 위치를 확인하지 못했습니다. 잠시 후 다시 시도하거나 주소 검색을 이용해 주세요.';
+    } on TimeoutException catch (e) {
+      ddriDebugPrint('[DDRI] 현 위치 조회 시간 초과: $e');
+      errorMessage.value =
+          '현재 위치 확인 시간이 초과되었습니다. 잠시 후 다시 시도하거나 주소 검색을 이용해 주세요.';
     } catch (e) {
-      errorMessage.value = '위치를 가져올 수 없습니다. 주소 검색을 이용해 주세요.';
+      ddriDebugPrint('[DDRI] 현 위치 조회 실패: $e');
+      errorMessage.value =
+          '현재 위치를 가져오지 못했습니다. 브라우저 위치 권한을 확인하거나 주소 검색을 이용해 주세요.';
     } finally {
       isLoadingLocation.value = false;
     }

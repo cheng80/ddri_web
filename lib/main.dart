@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_web_plugins/url_strategy.dart';
+import 'package:get_storage/get_storage.dart';
 
 import 'app.dart';
 
@@ -9,6 +10,7 @@ import 'app.dart';
 /// 웹에서는 Path 기반 URL을 사용해 깔끔한 라우트(/user, /admin)를 제공한다.
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
 
   if (kIsWeb) {
     usePathUrlStrategy(); // /#/user → /user (path 기반 URL)

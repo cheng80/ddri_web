@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="DDRI 따릉이 대여소 조회 및 재배치 지원 서비스">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -29,10 +29,304 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>ddri_web</title>
+  <title>DDRI</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    :root {
+      --ddri-bg: #f4f8f5;
+      --ddri-surface: rgba(255, 255, 255, 0.84);
+      --ddri-primary: #00a857;
+      --ddri-primary-deep: #0f7f48;
+      --ddri-accent: #d6f2e2;
+      --ddri-text: #163226;
+      --ddri-muted: #587166;
+      --ddri-stroke: rgba(18, 61, 41, 0.10);
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      background:
+        radial-gradient(circle at 18% 18%, rgba(0, 168, 87, 0.12), transparent 22%),
+        radial-gradient(circle at 84% 14%, rgba(24, 124, 78, 0.10), transparent 18%),
+        linear-gradient(180deg, #f9fcfa 0%, var(--ddri-bg) 100%);
+      overflow: hidden;
+      font-family:
+        "Pretendard",
+        "Apple SD Gothic Neo",
+        "Noto Sans KR",
+        system-ui,
+        sans-serif;
+    }
+
+    body.app-ready #ddri-splash {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transition: opacity 320ms ease, visibility 320ms ease;
+    }
+
+    #ddri-splash {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      z-index: 9999;
+      backdrop-filter: blur(12px);
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.54));
+    }
+
+    .ddri-splash-shell {
+      position: relative;
+      width: min(520px, calc(100vw - 40px));
+      padding: 36px 30px 30px;
+      border-radius: 32px;
+      background: var(--ddri-surface);
+      border: 1px solid var(--ddri-stroke);
+      box-shadow:
+        0 20px 60px rgba(26, 72, 45, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.64);
+      overflow: hidden;
+    }
+
+    .ddri-splash-shell::before,
+    .ddri-splash-shell::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      background: rgba(0, 168, 87, 0.08);
+      filter: blur(2px);
+    }
+
+    .ddri-splash-shell::before {
+      width: 180px;
+      height: 180px;
+      top: -74px;
+      right: -38px;
+    }
+
+    .ddri-splash-shell::after {
+      width: 120px;
+      height: 120px;
+      left: -26px;
+      bottom: -34px;
+    }
+
+    .ddri-brand {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .ddri-bike-badge {
+      width: 84px;
+      height: 84px;
+      border-radius: 28px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(180deg, #e8f7ee 0%, #d4f0e0 100%);
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.8),
+        0 14px 24px rgba(0, 168, 87, 0.12);
+      flex: 0 0 auto;
+    }
+
+    .ddri-brand-copy {
+      min-width: 0;
+      max-width: 340px;
+    }
+
+    .ddri-brand-kicker {
+      margin: 0 0 6px;
+      font-size: 12px;
+      line-height: 1;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: var(--ddri-primary-deep);
+      text-transform: uppercase;
+    }
+
+    .ddri-brand-title {
+      margin: 0;
+      font-size: clamp(34px, 5vw, 48px);
+      line-height: 0.96;
+      font-weight: 900;
+      letter-spacing: -0.06em;
+      color: var(--ddri-text);
+    }
+
+    .ddri-brand-subtitle {
+      margin: 8px 0 0;
+      font-size: clamp(14px, 2vw, 16px);
+      line-height: 1.6;
+      word-break: keep-all;
+      color: var(--ddri-muted);
+      font-weight: 600;
+    }
+
+    .ddri-loading-row {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 26px;
+      padding-top: 20px;
+    }
+
+    .ddri-loading-row::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(0, 168, 87, 0.05), rgba(0, 168, 87, 0.24), rgba(0, 168, 87, 0.05));
+    }
+
+    .ddri-loading-copy {
+      min-width: 0;
+    }
+
+    .ddri-loading-label {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 800;
+      color: var(--ddri-text);
+    }
+
+    .ddri-loading-hint {
+      margin: 6px 0 0;
+      font-size: 13px;
+      color: var(--ddri-muted);
+      line-height: 1.45;
+      font-weight: 600;
+      word-break: keep-all;
+    }
+
+    .ddri-loading-pulse {
+      position: relative;
+      width: 120px;
+      height: 12px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(0, 168, 87, 0.10);
+      flex: 0 0 auto;
+    }
+
+    .ddri-loading-pulse::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: linear-gradient(90deg, transparent 0%, rgba(0, 168, 87, 0.94) 48%, transparent 100%);
+      transform: translateX(-100%);
+      animation: ddri-pulse 1.35s ease-in-out infinite;
+    }
+
+    .ddri-bike-icon {
+      width: 48px;
+      height: 48px;
+    }
+
+    .ddri-bike-icon * {
+      stroke: var(--ddri-primary);
+      stroke-width: 2.6;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .ddri-bike-icon .ddri-bike-fill {
+      fill: rgba(0, 168, 87, 0.15);
+      stroke: none;
+    }
+
+    @keyframes ddri-pulse {
+      to {
+        transform: translateX(100%);
+      }
+    }
+
+    @media (max-width: 640px) {
+      .ddri-splash-shell {
+        width: min(440px, calc(100vw - 28px));
+        padding: 28px 22px 24px;
+        border-radius: 26px;
+      }
+
+      .ddri-bike-badge {
+        width: 68px;
+        height: 68px;
+        border-radius: 22px;
+      }
+
+      .ddri-bike-icon {
+        width: 38px;
+        height: 38px;
+      }
+
+      .ddri-brand {
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .ddri-brand-copy {
+        max-width: 100%;
+      }
+
+      .ddri-loading-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .ddri-loading-pulse {
+        width: 100%;
+      }
+    }
+  </style>
 </head>
 <body>
+  <div id="ddri-splash" aria-live="polite" aria-label="DDRI 로딩 화면">
+    <div class="ddri-splash-shell">
+      <div class="ddri-brand">
+        <div class="ddri-bike-badge" aria-hidden="true">
+          <svg class="ddri-bike-icon" viewBox="0 0 48 48" role="img" aria-hidden="true">
+            <circle cx="14" cy="33" r="8"></circle>
+            <circle cx="34" cy="33" r="8"></circle>
+            <path d="M20 15h6l5 10"></path>
+            <path d="M19 15l-5 9"></path>
+            <path d="M20 15l8 0"></path>
+            <path d="M22 20l-4 7h9"></path>
+            <path d="M31 15h5"></path>
+            <path d="M32 15l2-4"></path>
+            <circle class="ddri-bike-fill" cx="14" cy="33" r="2.2"></circle>
+            <circle class="ddri-bike-fill" cx="34" cy="33" r="2.2"></circle>
+          </svg>
+        </div>
+        <div class="ddri-brand-copy">
+          <p class="ddri-brand-kicker">Ddri Mobility</p>
+          <h1 class="ddri-brand-title">DDRI</h1>
+          <p class="ddri-brand-subtitle">
+            따릉이 자전거가 어디에 남아 있을지,<br>
+            DDRI가 먼저 살펴보고 있어요.
+          </p>
+        </div>
+      </div>
+      <div class="ddri-loading-row">
+        <div class="ddri-loading-copy">
+          <p class="ddri-loading-label">따릉이 자전거를 데리러 가는 중</p>
+          <p class="ddri-loading-hint">잠깐만요. 서비스가 금방 도착합니다.</p>
+        </div>
+        <div class="ddri-loading-pulse" aria-hidden="true"></div>
+      </div>
+    </div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +336,30 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    (function () {
+      const markReady = () => document.body.classList.add('app-ready');
+
+      window.addEventListener('flutter-first-frame', markReady, { once: true });
+
+      const observer = new MutationObserver(() => {
+        if (document.querySelector('flutter-view, flt-glass-pane, canvas')) {
+          markReady();
+          observer.disconnect();
+        }
+      });
+
+      observer.observe(document.body, { childList: true, subtree: true });
+
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          if (!document.body.classList.contains('app-ready') &&
+              document.querySelector('flutter-view, flt-glass-pane, canvas')) {
+            markReady();
+          }
+        }, 1200);
+      });
+    })();
+  </script>
 </body>
 </html>

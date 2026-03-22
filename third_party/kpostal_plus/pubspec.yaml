@@ -1,0 +1,39 @@
+name: kpostal_plus
+description: Enhanced kpostal package with cross-platform support for mobile and web. Korean postal address search powered by Kakao postcode service.
+version: 1.0.3
+homepage: https://github.com/pyowonsik/kpostal_plus
+repository: https://github.com/pyowonsik/kpostal_plus
+issue_tracker: https://github.com/pyowonsik/kpostal_plus/issues
+documentation: https://pub.dev/packages/kpostal_plus
+
+topics:
+  - korean
+  - address
+  - kakao
+  - geocoding
+  - cross-platform
+
+platforms:
+  android:
+  ios:
+  web:
+
+environment:
+  sdk: ^3.5.0
+  flutter: '>=3.24.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_inappwebview: ^6.1.5
+  geocoding: ^3.0.0
+  web: ^1.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  assets:
+    - assets/kakao_postcode_localhost.html

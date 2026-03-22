@@ -1,5 +1,6 @@
 # DDRI API 명세서
 
+작성자: 김택권
 작성일: 2026-03-20  
 갱신일: 2026-03-20  
 목적: 현재 `ddri_web`에서 실제 사용 중인 조회형 API를 화면 기준으로 정리한다.
@@ -33,34 +34,39 @@
 
 ## 1. API 목록
 
-| 메서드 | 경로 | 설명 |
-|--------|------|------|
-| GET | `/` | API 정보 |
-| GET | `/health` | 헬스 체크 |
-| GET | `/v1/user/stations/nearby` | 사용자 위치 기준 스테이션 조회 |
-| GET | `/v1/admin/stations/risk` | 관리자 위험도 목록 조회 |
-| GET | `/v1/stations` | 스테이션 마스터 목록 조회 |
-| GET | `/v1/weather/direct` | 일별 날씨 목록 조회 |
+
+| 메서드 | 경로                          | 설명                |
+| --- | --------------------------- | ----------------- |
+| GET | `/`                         | API 정보            |
+| GET | `/health`                   | 헬스 체크             |
+| GET | `/v1/user/stations/nearby`  | 사용자 위치 기준 스테이션 조회 |
+| GET | `/v1/admin/stations/risk`   | 관리자 위험도 목록 조회     |
+| GET | `/v1/stations`              | 스테이션 마스터 목록 조회    |
+| GET | `/v1/weather/direct`        | 일별 날씨 목록 조회       |
 | GET | `/v1/weather/direct/single` | 특정 시각 기준 날씨 1건 조회 |
+
 
 ## 2. 사용자 API
 
 ### `GET /v1/user/stations/nearby`
 
 용도:
+
 - 사용자 페이지 `/user`의 메인 리스트와 지도 바인딩
 - 지정 위치 기준 거리순 스테이션 목록 조회
 - 선택 시각 기준 날씨와 주간 날씨를 함께 제공
 
 #### 요청 파라미터
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `lat` | number | ✓ | 위도 |
-| `lng` | number | ✓ | 경도 |
-| `target_datetime` | string | ✓ | ISO 8601 기준 시각 |
-| `limit` | integer | | 반환 개수, 기본 `20`, 최대 `50` |
-| `radius_m` | integer | | 반경(m). 사용자 화면에서 `300m`, `500m`, `1km` 중 하나를 선택한 경우에만 실제 필터로 사용 |
+
+| 파라미터              | 타입      | 필수  | 설명                                                             |
+| ----------------- | ------- | --- | -------------------------------------------------------------- |
+| `lat`             | number  | ✓   | 위도                                                             |
+| `lng`             | number  | ✓   | 경도                                                             |
+| `target_datetime` | string  | ✓   | ISO 8601 기준 시각                                                 |
+| `limit`           | integer |     | 반환 개수, 기본 `20`, 최대 `50`                                        |
+| `radius_m`        | integer |     | 반경(m). 사용자 화면에서 `300m`, `500m`, `1km` 중 하나를 선택한 경우에만 실제 필터로 사용 |
+
 
 #### 현재 응답 구조
 
@@ -127,19 +133,22 @@
 ### `GET /v1/admin/stations/risk`
 
 용도:
+
 - 관리자 페이지 `/admin`의 요약 카드, 표, 예외 섹션 바인딩
 - 기준 시각의 부족 위험 목록 조회
 
 #### 요청 파라미터
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `base_datetime` | string | ✓ | ISO 8601 기준 시각 |
-| `urgent_only` | boolean | | 위험 스테이션만 필터링 |
-| `district_name` | string | | 행정동 필터 |
-| `cluster_code` | string | | 지역 특성 필터 |
-| `sort_by` | string | | `risk_score`, `reallocation_priority`, `stock_gap` |
-| `sort_order` | string | | `asc`, `desc` |
+
+| 파라미터            | 타입      | 필수  | 설명                                                 |
+| --------------- | ------- | --- | -------------------------------------------------- |
+| `base_datetime` | string  | ✓   | ISO 8601 기준 시각                                     |
+| `urgent_only`   | boolean |     | 위험 스테이션만 필터링                                       |
+| `district_name` | string  |     | 행정동 필터                                             |
+| `cluster_code`  | string  |     | 지역 특성 필터                                           |
+| `sort_by`       | string  |     | `risk_score`, `reallocation_priority`, `stock_gap` |
+| `sort_order`    | string  |     | `asc`, `desc`                                      |
+
 
 #### 현재 응답 구조
 
@@ -203,15 +212,18 @@
 ### `GET /v1/stations`
 
 용도:
+
 - 화면용 기본 스테이션 정보 조회
 - 사용자/관리자 공용 마스터 목록 바인딩
 
 #### 요청 파라미터
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `district_name` | string | | 행정동 필터 |
-| `cluster_code` | string | | 지역 특성 필터 |
+
+| 파라미터            | 타입     | 필수  | 설명       |
+| --------------- | ------ | --- | -------- |
+| `district_name` | string |     | 행정동 필터   |
+| `cluster_code`  | string |     | 지역 특성 필터 |
+
 
 #### 현재 응답 구조
 
@@ -248,16 +260,19 @@
 ### `GET /v1/weather/direct`
 
 용도:
+
 - 일별 예보 배열 조회
 - 사용자/관리자 주간 날씨 UI 구성
 
 #### 요청 파라미터
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `lat` | number | ✓ | 위도 |
-| `lon` | number | ✓ | 경도 |
-| `start_date` | string | | `YYYY-MM-DD`, 없으면 오늘 포함 기본 범위 반환 |
+
+| 파라미터         | 타입     | 필수  | 설명                               |
+| ------------ | ------ | --- | -------------------------------- |
+| `lat`        | number | ✓   | 위도                               |
+| `lon`        | number | ✓   | 경도                               |
+| `start_date` | string |     | `YYYY-MM-DD`, 없으면 오늘 포함 기본 범위 반환 |
+
 
 #### 응답 형태
 
@@ -279,17 +294,20 @@
 ### `GET /v1/weather/direct/single`
 
 용도:
+
 - 특정 시각에 가장 가까운 상세 날씨 1건 조회
 - 화면의 선택 시각 상세 날씨 UI 구성
 
 #### 요청 파라미터
 
-| 파라미터 | 타입 | 필수 | 설명 |
-|----------|------|------|------|
-| `lat` | number | ✓ | 위도 |
-| `lon` | number | ✓ | 경도 |
-| `target_datetime` | string | | ISO 8601 기준 시각 |
-| `target_date` | string | | 하위 호환용 `YYYY-MM-DD`, `target_datetime` 없을 때 사용 |
+
+| 파라미터              | 타입     | 필수  | 설명                                             |
+| ----------------- | ------ | --- | ---------------------------------------------- |
+| `lat`             | number | ✓   | 위도                                             |
+| `lon`             | number | ✓   | 경도                                             |
+| `target_datetime` | string |     | ISO 8601 기준 시각                                 |
+| `target_date`     | string |     | 하위 호환용 `YYYY-MM-DD`, `target_datetime` 없을 때 사용 |
+
 
 #### 응답 형태
 
@@ -313,3 +331,4 @@
 - `live` 모드용 전체 스테이션 확장
 - 입력 오류 문구와 예외 응답의 외부 노출 문구 일반화
 - 관리자 `exceptions` 구조의 보안형 응답 정리
+

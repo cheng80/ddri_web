@@ -12,11 +12,13 @@ class AppScaffold extends StatelessWidget {
     required this.title,
     required this.body,
     this.currentPath,
+    this.statusWidget,
   });
 
   final String title;
   final Widget body;
   final String? currentPath;
+  final Widget? statusWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -24,6 +26,7 @@ class AppScaffold extends StatelessWidget {
       appBar: TopNavBar(
         title: title,
         currentPath: currentPath ?? RoutePaths.user,
+        statusWidget: statusWidget,
       ),
       body: body,
     );
