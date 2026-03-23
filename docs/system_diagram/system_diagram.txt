@@ -1,0 +1,51 @@
+@startuml Ddareungi System Architecture
+
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam roundCorner 20
+skinparam defaultTextAlignment center
+
+skinparam arrow {
+  Color #7F8C8D
+  FontColor #2C3E50
+  FontSize 11
+}
+
+skinparam rectangle {
+  BorderColor #2C3E50
+  FontColor #2C3E50
+  FontSize 12
+}
+
+skinparam database {
+  BorderColor #2C3E50
+  FontColor #2C3E50
+  FontSize 12
+}
+
+skinparam cloud {
+  BorderColor #2C3E50
+  FontColor #2C3E50
+  FontSize 12
+}
+
+rectangle "📱 APP\n\n<b>따릉이 예측 앱</b>\n\nFlutter\nState Management: <b>GetX</b>" as App #E8F4FD
+
+rectangle "⚙️ GetStorage\n\n- Theme\n- Locale\n- User Preferences" as Storage #FDEDEC
+
+rectangle "🖥 Backend API\n\nFastAPI" as Backend #FFF3E0
+
+database "🗄 MySQL\n\n- Station Info\n- Prediction Result\n- User Data" as DB #E8F8F5
+
+cloud "☁ Open-Meteo API\n\n- Weather Data" as Weather #EBF5FB
+
+cloud "🚲 Public Bike API\n\n- 따릉이 실시간 조회" as BikeAPI #F9EBEA
+
+App --> Storage : Save / Load settings
+App --> Backend : Request data / prediction
+Backend --> DB : Read / Write
+Backend --> Weather : restful api
+Backend --> BikeAPI : restful api
+
+@enduml
